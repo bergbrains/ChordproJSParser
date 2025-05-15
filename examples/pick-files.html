@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChordPro File Picker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .file-picker {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+            background-color: #f9f9f9;
+        }
+        .file-list {
+            margin-top: 20px;
+        }
+        .file-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .file-item:hover {
+            background-color: #f0f0f0;
+        }
+        #preview {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            white-space: pre-wrap;
+            font-family: monospace;
+            background-color: #fafafa;
+            display: none;
+        }
+        #render-container {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+        }
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>ChordPro File Picker</h1>
+    
+    <div class="file-picker">
+        <p>Select ChordPro files to parse and display</p>
+        <input type="file" id="file-input" accept=".cho,.chordpro,.txt" multiple>
+        <p>or drag and drop files here</p>
+    </div>
+    
+    <div class="file-list" id="file-list">
+        <h2>Selected Files</h2>
+        <div id="selected-files">
+            <p>No files selected</p>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button id="view-source-btn" disabled>View Source</button>
+        <button id="render-btn" disabled>Render ChordPro</button>
+    </div>
+    
+    <pre id="preview"></pre>
+    
+    <div id="render-container"></div>
+    
+    <script src="../dist/chordprojs.min.js"></script>
+    <script>
+        // DOM Elements
+        const fileInput = document.getElementById('file-input');
+        const filePicker = document.querySelector('.file-picker');
+        const selectedFiles = document.getElementById('selected-files');
+        const viewSourceBtn = document.getElementById('view-source-btn');
+        const renderBtn = document.getElementById('render-btn');
+        const preview = document.getElementById('preview');
+        const renderContainer = document.getElementById('render-container');
+        
+        // File storage
+        const fileStorage = {
+            files: [],
+            currentFile: null
+        };
+        
+        // Event Listeners
+        fileInput.addEventListener('change', handleFileSelection);
+        
+        // Drag and drop support
+        filePicker.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            filePicker.style.borderColor = '#4CAF50';
+        });
+        
+        filePicker.addEventListener('dragleave', () => {
+            filePicker.style.borderColor = '#ccc';
+        });
+        
+        filePicker.addEventListener('drop', (e) => {
+            e.preventDefault();
+            filePicker.style.borderColor = '#ccc';
+            handleFileSelection({ target: { files: e.dataTransfer.files } });
+        });
+        
+        viewSourceBtn.addEventListener('click', viewSourceFile);
+        renderBtn.addEventListener('click', renderChordPro);
+        
+        // Functions
+        function handleFileSelection(event) {
+            const files = event.target.files;
+            
+            if (files.length === 0) return;
+            
+            fileStorage.files = Array.from(files);
+            updateFileList();
+            
+            viewSourceBtn.disabled = false;
+            renderBtn.disabled = false;
+        }
+        
+        function updateFileList() {
+            if (fileStorage.files.length === 0) {
+                selectedFiles.innerHTML = '<p>No files selected</p>';
+                return;
+            }
+            
+            let html = '';
+            fileStorage.files.forEach((file, index) => {
+                html += `<div class="file-item" data-index="${index}">${file.name}</div>`;
+            });
+            
+            selectedFiles.innerHTML = html;
+            
+            // Add click event to file items
+            document.querySelectorAll('.file-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.file-item').forEach(i => i.style.backgroundColor = '');
+                    item.style.backgroundColor = '#e0e0e0';
+                    
+                    const index = parseInt(item.getAttribute('data-index'));
+                    fileStorage.currentFile = fileStorage.files[index];
+                });
+            });
+            
+            // Select first file by default
+            if (fileStorage.files.length > 0) {
+                fileStorage.currentFile = fileStorage.files[0];
+                document.querySelector('.file-item').style.backgroundColor = '#e0e0e0';
+            }
+        }
+        
+        function viewSourceFile() {
+            if (!fileStorage.currentFile) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.textContent = e.target.result;
+                preview.style.display = 'block';
+                renderContainer.style.display = 'none';
+            };
+            reader.readAsText(fileStorage.currentFile);
+        }
+        
+        function renderChordPro() {
+            if (!fileStorage.currentFile) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    // Parse ChordPro content
+                    const parser = new ChordPro.Parser();
+                    const song = parser.parse(e.target.result);
+                    
+                    // Render the song
+                    const renderer = new ChordPro.HtmlRenderer();
+                    const html = renderer.render(song);
+                    
+                    renderContainer.innerHTML = html;
+                    renderContainer.style.display = 'block';
+                    preview.style.display = 'none';
+                    
+                    console.log("Parsed song:", song);
+                } catch (error) {
+                    renderContainer.innerHTML = `<p style="color: red;">Error parsing ChordPro file: ${error.message}</p>`;
+                    renderContainer.style.display = 'block';
+                    preview.style.display = 'none';
+                    console.error("ChordPro parsing error:", error);
+                }
+            };
+            reader.readAsText(fileStorage.currentFile);
+        }
+    </script>
+</body>
+</html>
