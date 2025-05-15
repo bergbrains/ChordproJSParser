@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+      <title>ChordproJS Basic Example</title>
+      <style>
+        body {
+          font-family: sans-serif;
+          padding: 15px;
+          line-height: 1.4;
+        }
+        pre.chord-line {
+          color: #c00;
+          font-weight: bold;
+          font-family: monospace;
+          margin: 0;
+          line-height: 1.1;
+        }
+        pre.lyric-line {
+          margin: 0 0 8px 0;
+          font-family: monospace;
+          line-height: 1.1;
+        }
+        .comment {
+          font-style: italic;
+          color: gray;
+          margin: 8px 0;
+        }
+        h1, h2 {
+          margin: 5px 0;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>ChordproJS Basic Example</h1>
+      <div id="song-container"></div>
+
+      <script src="../dist/chordprojs.min.js"></script>
+      <script>
+        // Check if ChordproJS loaded
+        if (typeof ChordproJS === 'undefined') {
+          document.getElementById('song-container').innerHTML =
+            '<p style="color: red">Error: ChordproJS is not loaded. Make sure to build the project first.</p>';
+        } else {
+          const chordproText = `
+    {title: Amazing Grace}
+    {subtitle: Traditional}
+    {key: G}
+
+    [G]Amazing [D]grace! How [G]sweet the [D]sound
+    That [G]saved a wretch [C]like [D]me!
+    I [G]once was [D]lost, but [G]now am [D]found,
+    Was [G]blind, but [C]now [D]I [G]see.
+    `;
+
+          const chordpro = ChordproJS();
+          chordpro.renderToElement(chordproText, '#song-container');
+        }
+      </script>
+    </body>
+    </html>

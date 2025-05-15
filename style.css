@@ -1,0 +1,60 @@
+body {
+  font-family: sans-serif;
+  padding: 15px;
+  line-height: 1.4;
+}
+
+input[type="file"],
+input[type="text"],
+button {
+  margin-right: 10px;
+  padding: 6px 12px;
+  font-size: 1em;
+}
+
+iframe {
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+  background: #fff;
+}
+
+h1,
+h2 {
+  margin: 5px 0;
+}
+
+.comment {
+  font-style: italic;
+  color: gray;
+  margin: 8px 0;
+}
+
+#renderTarget {
+  border: 1px solid #ccc;
+  padding: 15px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+pre.chord-line {
+  color: #c00;
+  font-weight: bold;
+  font-family: monospace;
+  margin: 0;
+  line-height: 1.1;
+}
+
+pre.lyric-line {
+  margin: 0 0 8px 0;
+  font-family: monospace;
+  line-height: 1.1;
+}
+
+.comment {
+  font-style: italic;
+  color: gray;
+  margin: 8px 0;
+}
+
+h1,
+h2 {
+  margin: 5px 0;
+}
