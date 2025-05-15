@@ -2,17 +2,15 @@
 
 ## Overview
 
-The ChordPro JS Renderer is a JavaScript module designed to easily integrate ChordPro-formatted song files into any web
-application. It parses standard ChordPro files and dynamically renders them into HTML, allowing customizable styling
-through CSS.
+The ChordPro JS Renderer is a JavaScript module designed to easily integrate ChordPro-formatted song files into any web application. It parses standard ChordPro files and dynamically renders them into HTML, allowing customizable styling through CSS.
 
 ---
 
 ## Features
 
 - Parses standard ChordPro syntax:
-  - Titles, artists, comments, and environment tags (chorus, verse, etc.)
-  - Chords rendered clearly above corresponding lyrics
+    - Titles, artists, comments, and environment tags (chorus, verse, etc.)
+    - Chords rendered clearly above corresponding lyrics
 - Flexible rendering into any specified HTML container (`div`)
 - Customizable appearance via standard CSS
 
@@ -25,8 +23,9 @@ through CSS.
 Copy `chordpro-renderer.js` into your project directory.
 
 ```html
+
 <script type="module">
-  import { renderChordPro } from "./chordpro-renderer.js";
+    import { renderChordPro } from "./chordpro-renderer.js";
 </script>
 ```
 
@@ -35,8 +34,8 @@ Copy `chordpro-renderer.js` into your project directory.
 Include these elements in your HTML:
 
 ```html
-<input type="file" id="filePicker" accept=".cho,.chopro,.txt" />
-<input type="text" id="filePath" placeholder="Or enter file URL" />
+<input type="file" id="filePicker" accept=".cho,.chopro,.txt"/>
+<input type="text" id="filePath" placeholder="Or enter file URL"/>
 <button id="loadBtn">Load ChordPro File</button>
 <div id="chordproTarget"></div>
 ```
@@ -46,31 +45,32 @@ Include these elements in your HTML:
 Here's how to connect user interaction with the renderer:
 
 ```html
+
 <script type="module">
-  import { renderChordPro } from "./chordpro-renderer.js";
-
-  const target = document.getElementById("chordproTarget");
-  const filePicker = document.getElementById("filePicker");
-  const filePath = document.getElementById("filePath");
-  const loadBtn = document.getElementById("loadBtn");
-
-  filePicker.addEventListener("change", function (event) {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-
-    reader.onload = function (e) {
-      renderChordPro(e.target.result, target);
-    };
-
-    reader.readAsText(file);
-  });
-
-  loadBtn.addEventListener("click", function () {
-    fetch(filePath.value)
-      .then((response) => response.text())
-      .then((text) => renderChordPro(text, target))
-      .catch((err) => alert("Failed to load file: " + err));
-  });
+    import { renderChordPro } from "./chordpro-renderer.js";
+  
+    const target = document.getElementById("chordproTarget");
+    const filePicker = document.getElementById("filePicker");
+    const filePath = document.getElementById("filePath");
+    const loadBtn = document.getElementById("loadBtn");
+  
+    filePicker.addEventListener("change", function (event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+  
+      reader.onload = function (e) {
+        renderChordPro(e.target.result, target);
+      };
+  
+      reader.readAsText(file);
+    });
+  
+    loadBtn.addEventListener("click", function () {
+      fetch(filePath.value)
+        .then((response) => response.text())
+        .then((text) => renderChordPro(text, target))
+        .catch((err) => alert("Failed to load file: " + err));
+    });
 </script>
 ```
 
