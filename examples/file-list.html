@@ -43,7 +43,7 @@
             overflow: hidden;
         }
 
-        /* Left column - file list */
+        /* Left column - song list */
         .file-list-column {
             width: 25%;
             border-right: 4px solid #ccc;
@@ -193,7 +193,7 @@
 
 <!-- Main container with two columns -->
 <div class="main-container">
-    <!-- Left column - File list -->
+    <!-- Left column - Song list -->
     <div class="file-list-column">
         <div class="file-picker">
             <p>Select ChordPro files to parse and display</p>
@@ -201,9 +201,9 @@
             <p>or drag and drop files here</p>
         </div>
 
-        <h2>Selected Files</h2>
+        <h2>Song List</h2>
         <div id="selected-files">
-            <p>No files selected</p>
+            <p>No songs selected</p>
         </div>
     </div>
 
@@ -245,9 +245,21 @@
             // Save song to localStorage
             saveSong: function(file, content) {
                 try {
+                    // Parse the content to get the song title
+                    let songTitle = file.name;
+                    try {
+                        const parsedSong = chordpro.parse(content);
+                        if (parsedSong && parsedSong.title) {
+                            songTitle = parsedSong.title;
+                        }
+                    } catch (parseError) {
+                        console.warn('Could not parse song title:', parseError);
+                    }
+
                     // Create metadata object
                     const metadata = {
                         name: file.name,
+                        title: songTitle,
                         lastModified: file.lastModified,
                         size: file.size,
                         timestamp: Date.now()
@@ -297,9 +309,26 @@
                     this.files = songList.map(metadata => {
                         const content = localStorage.getItem(metadata.key);
 
+                        // If the song was saved before we added title support, try to parse it now
+                        let songTitle = metadata.title;
+                        if (!songTitle) {
+                            try {
+                                const parsedSong = chordpro.parse(content);
+                                if (parsedSong && parsedSong.title) {
+                                    songTitle = parsedSong.title;
+                                } else {
+                                    songTitle = metadata.name;
+                                }
+                            } catch (parseError) {
+                                console.warn('Could not parse song title:', parseError);
+                                songTitle = metadata.name;
+                            }
+                        }
+
                         // Create a File-like object
                         const file = {
                             name: metadata.name,
+                            title: songTitle,
                             lastModified: metadata.lastModified,
                             size: metadata.size,
                             type: 'text/plain',
@@ -441,13 +470,15 @@
 
         function updateFileList() {
             if (fileStorage.files.length === 0) {
-                selectedFiles.innerHTML = '<p>No files selected</p>';
+                selectedFiles.innerHTML = '<p>No songs selected</p>';
                 return;
             }
 
             let html = '';
             fileStorage.files.forEach((file, index) => {
-                html += `<div class="file-item" data-index="${index}">${file.name}</div>`;
+                // Use the song title if available, otherwise fall back to file name
+                const displayName = file.title || file.name;
+                html += `<div class="file-item" data-index="${index}">${displayName}</div>`;
             });
 
             selectedFiles.innerHTML = html;
