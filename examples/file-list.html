@@ -69,6 +69,19 @@
             text-align: center;
             margin-bottom: 20px;
             background-color: #f9f9f9;
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out, margin 0.3s ease-out, padding 0.3s ease-out;
+            max-height: 200px;
+            opacity: 1;
+            overflow: hidden;
+        }
+
+        .file-picker.hidden {
+            max-height: 0;
+            opacity: 0;
+            margin: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            border: none;
         }
 
         /* File list styles */
@@ -110,6 +123,21 @@
 
         button:hover {
             background-color: cadetblue;
+        }
+
+        /* Toggle link styles */
+        .toggle-link {
+            display: inline-block;
+            color: #0066cc;
+            text-decoration: underline;
+            cursor: pointer;
+            min-width: 120px; /* Ensures consistent width */
+            text-align: left;
+            font-weight: normal;
+        }
+
+        .toggle-link:hover {
+            color: #004499;
         }
 
         /* Song display styles */
@@ -157,7 +185,8 @@
 <header class="app-header">
     <h1>ChordproJS Parser</h1>
     <div class="header-buttons">
-        <button id="open-btn">Open Files</button>
+        <button id="open-btn">Load Files</button>
+        <button id="clear-storage-btn">Clear Storage</button>
         <!-- Additional buttons can be added here -->
     </div>
 </header>
@@ -181,8 +210,7 @@
     <!-- Right column - Song display -->
     <div class="song-display-column">
         <div class="controls">
-            <button id="view-source-btn" disabled>View Source</button>
-            <button id="render-btn" disabled>Render ChordPro</button>
+            <a id="toggle-view-link" class="toggle-link" style="display: none;">View Source</a>
         </div>
 
         <pre id="preview"></pre>
@@ -200,28 +228,137 @@
         // DOM Elements
         const filePicker = document.getElementById('filePicker');
         const openBtn = document.getElementById('open-btn');
+        const clearStorageBtn = document.getElementById('clear-storage-btn');
         const filePickerArea = document.querySelector('.file-picker');
         const selectedFiles = document.getElementById('selected-files');
-        const viewSourceBtn = document.getElementById('view-source-btn');
-        const renderBtn = document.getElementById('render-btn');
+        const toggleViewLink = document.getElementById('toggle-view-link');
         const preview = document.getElementById('preview');
         const songContainer = document.getElementById('song-container');
+
+        // Track current view state
+        let isSourceView = false;
 
         // File storage
         const fileStorage = {
             files: [],
-            currentFile: null
+            currentFile: null,
+            // Save song to localStorage
+            saveSong: function(file, content) {
+                try {
+                    // Create metadata object
+                    const metadata = {
+                        name: file.name,
+                        lastModified: file.lastModified,
+                        size: file.size,
+                        timestamp: Date.now()
+                    };
+
+                    // Generate a unique key for this song
+                    const songKey = `song_${file.name}_${file.lastModified}`;
+
+                    // Store the song content
+                    localStorage.setItem(songKey, content);
+
+                    // Get existing song list or create a new one
+                    let songList = JSON.parse(localStorage.getItem('songList') || '[]');
+
+                    // Check if song already exists in the list
+                    const existingIndex = songList.findIndex(item => 
+                        item.name === metadata.name && item.lastModified === metadata.lastModified);
+
+                    if (existingIndex >= 0) {
+                        // Update existing entry
+                        songList[existingIndex] = { ...metadata, key: songKey };
+                    } else {
+                        // Add new entry
+                        songList.push({ ...metadata, key: songKey });
+                    }
+
+                    // Save updated song list
+                    localStorage.setItem('songList', JSON.stringify(songList));
+
+                    return true;
+                } catch (error) {
+                    console.error('Error saving song to localStorage:', error);
+                    return false;
+                }
+            },
+
+            // Load songs from localStorage
+            loadSongs: function() {
+                try {
+                    const songList = JSON.parse(localStorage.getItem('songList') || '[]');
+
+                    if (songList.length === 0) {
+                        return false;
+                    }
+
+                    // Convert metadata back to File-like objects with content
+                    this.files = songList.map(metadata => {
+                        const content = localStorage.getItem(metadata.key);
+
+                        // Create a File-like object
+                        const file = {
+                            name: metadata.name,
+                            lastModified: metadata.lastModified,
+                            size: metadata.size,
+                            type: 'text/plain',
+                            content: content,
+                            // Add a method to get content (similar to FileReader)
+                            getContent: function() {
+                                return this.content;
+                            }
+                        };
+
+                        return file;
+                    });
+
+                    return this.files.length > 0;
+                } catch (error) {
+                    console.error('Error loading songs from localStorage:', error);
+                    return false;
+                }
+            },
+
+            // Clear all songs from localStorage
+            clearSongs: function() {
+                try {
+                    const songList = JSON.parse(localStorage.getItem('songList') || '[]');
+
+                    // Remove each song content
+                    songList.forEach(metadata => {
+                        localStorage.removeItem(metadata.key);
+                    });
+
+                    // Remove the song list
+                    localStorage.removeItem('songList');
+
+                    return true;
+                } catch (error) {
+                    console.error('Error clearing songs from localStorage:', error);
+                    return false;
+                }
+            }
         };
 
         // Create an instance of ChordproJS
         const chordpro = ChordproJS();
 
+        // Load saved songs from localStorage on page load
+        if (fileStorage.loadSongs()) {
+            updateFileList();
+            toggleViewLink.style.display = 'inline-block';
+        }
+
         // Event Listeners
         filePicker.addEventListener('change', handleFileSelection);
 
-        // Open button triggers file picker
+        // Initialize file picker as hidden
+        filePickerArea.classList.add('hidden');
+
+        // Load button toggles file picker visibility
         openBtn.addEventListener('click', () => {
-            filePicker.click();
+            filePickerArea.classList.toggle('hidden');
         });
 
         // Drag and drop support
@@ -240,8 +377,28 @@
             handleFileSelection({target: {files: e.dataTransfer.files}});
         });
 
-        viewSourceBtn.addEventListener('click', viewSourceFile);
-        renderBtn.addEventListener('click', renderChordPro);
+        toggleViewLink.addEventListener('click', toggleView);
+
+        // Clear storage button event listener
+        clearStorageBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all stored songs?')) {
+                // Clear localStorage
+                fileStorage.clearSongs();
+
+                // Reset fileStorage
+                fileStorage.files = [];
+                fileStorage.currentFile = null;
+
+                // Update UI
+                selectedFiles.innerHTML = '<p>No files selected</p>';
+                toggleViewLink.style.display = 'none';
+                preview.style.display = 'none';
+                songContainer.innerHTML = '';
+                songContainer.style.display = 'none';
+
+                alert('All stored songs have been cleared.');
+            }
+        });
 
         // Functions
         function handleFileSelection(event) {
@@ -250,10 +407,36 @@
             if (files.length === 0) return;
 
             fileStorage.files = Array.from(files);
+
+            // Save each file to localStorage
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const content = e.target.result;
+                    fileStorage.saveSong(file, content);
+                };
+                reader.readAsText(file);
+            });
+
             updateFileList();
 
-            viewSourceBtn.disabled = false;
-            renderBtn.disabled = false;
+            // Show the toggle link
+            toggleViewLink.style.display = 'inline-block';
+        }
+
+        // Toggle between source and rendered views
+        function toggleView() {
+            if (!fileStorage.currentFile) return;
+
+            isSourceView = !isSourceView;
+
+            if (isSourceView) {
+                toggleViewLink.textContent = 'Show Rendered';
+                viewSourceFile();
+            } else {
+                toggleViewLink.textContent = 'View Source';
+                renderChordPro();
+            }
         }
 
         function updateFileList() {
@@ -283,6 +466,10 @@
                     const index = parseInt(item.getAttribute('data-index'));
                     fileStorage.currentFile = fileStorage.files[index];
 
+                    // Reset view state and link text
+                    isSourceView = false;
+                    toggleViewLink.textContent = 'View Source';
+
                     // Automatically render the selected file
                     renderChordPro();
                 });
@@ -292,6 +479,11 @@
             if (fileStorage.files.length > 0) {
                 fileStorage.currentFile = fileStorage.files[0];
                 document.querySelector('.file-item').classList.add('active');
+
+                // Reset view state and link text
+                isSourceView = false;
+                toggleViewLink.textContent = 'View Source';
+
                 renderChordPro(); // Automatically render the first file
             }
         }
@@ -299,33 +491,58 @@
         function viewSourceFile() {
             if (!fileStorage.currentFile) return;
 
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                preview.textContent = e.target.result;
+            // Check if it's a File-like object from localStorage
+            if (fileStorage.currentFile.getContent) {
+                // Use the getContent method for File-like objects
+                preview.textContent = fileStorage.currentFile.getContent();
                 preview.style.display = 'block';
                 songContainer.style.display = 'none';
-            };
-            reader.readAsText(fileStorage.currentFile);
+            } else {
+                // Use FileReader for regular File objects
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.textContent = e.target.result;
+                    preview.style.display = 'block';
+                    songContainer.style.display = 'none';
+                };
+                reader.readAsText(fileStorage.currentFile);
+            }
         }
 
         function renderChordPro() {
             if (!fileStorage.currentFile) return;
 
-            const reader = new FileReader();
-            reader.onload = (e) => {
+            // Check if it's a File-like object from localStorage
+            if (fileStorage.currentFile.getContent) {
                 try {
                     // Reset containers
                     preview.style.display = 'none';
                     songContainer.style.display = 'block';
 
                     // Use the ChordproJS API to render
-                    chordpro.renderToElement(e.target.result, '#song-container');
+                    chordpro.renderToElement(fileStorage.currentFile.getContent(), '#song-container');
                 } catch (error) {
                     songContainer.innerHTML = `<p style="color: red;">Error parsing ChordPro file: ${error.message}</p>`;
                     console.error("ChordPro parsing error:", error);
                 }
-            };
-            reader.readAsText(fileStorage.currentFile);
+            } else {
+                // Use FileReader for regular File objects
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        // Reset containers
+                        preview.style.display = 'none';
+                        songContainer.style.display = 'block';
+
+                        // Use the ChordproJS API to render
+                        chordpro.renderToElement(e.target.result, '#song-container');
+                    } catch (error) {
+                        songContainer.innerHTML = `<p style="color: red;">Error parsing ChordPro file: ${error.message}</p>`;
+                        console.error("ChordPro parsing error:", error);
+                    }
+                };
+                reader.readAsText(fileStorage.currentFile);
+            }
         }
     }
 </script>
