@@ -53,20 +53,90 @@ export function renderToHTML(parsedData, options = {}) {
     html += `<div class="key">Key: ${escapeHtml(parsedData.key)}</div>`;
   }
 
+  // Apply transposition if needed
+  if (parsedData.metadata && parsedData.metadata.transpose && typeof settings.transposeChords === 'function') {
+    const transposeValue = parseInt(parsedData.metadata.transpose, 10);
+    if (!isNaN(transposeValue)) {
+      parsedData.sections.forEach(section => {
+        section.lines.forEach(line => {
+          if (line.type === "chordLine" && line.chords) {
+            line.chords = line.chords.map(chord => 
+              settings.transposeChords(chord, transposeValue)
+            );
+          }
+        });
+      });
+    }
+  }
+
   // Render sections
   parsedData.sections.forEach((section) => {
-    if (section.type === "chorus") {
-      html += '<div class="section chorus">';
-    } else {
-      html += '<div class="section verse">';
+    // Handle section type
+    switch (section.type) {
+      case "chorus":
+        html += '<div class="section chorus">';
+        if (section.label) {
+          html += `<div class="section-label">${escapeHtml(section.label)}</div>`;
+        }
+        break;
+      case "bridge":
+        html += '<div class="section bridge">';
+        if (section.label) {
+          html += `<div class="section-label">${escapeHtml(section.label)}</div>`;
+        }
+        break;
+      case "tab":
+        html += '<div class="section tab">';
+        if (section.label) {
+          html += `<div class="section-label">${escapeHtml(section.label)}</div>`;
+        }
+        break;
+      case "grid":
+        html += '<div class="section grid">';
+        if (section.label) {
+          html += `<div class="section-label">${escapeHtml(section.label)}</div>`;
+        }
+        break;
+      case "abc":
+      case "ly":
+      case "svg":
+      case "textblock":
+        html += `<div class="section ${section.type}">`;
+        // For delegated environments, we would normally process the content
+        // and embed the result. For now, we'll just display it as pre-formatted text.
+        if (section.content) {
+          html += `<pre class="${section.type}-content">${escapeHtml(section.content)}</pre>`;
+        }
+        break;
+      case "verse":
+      default:
+        html += '<div class="section verse">';
+        if (section.label) {
+          html += `<div class="section-label">${escapeHtml(section.label)}</div>`;
+        }
+        break;
     }
 
     section.lines.forEach((line) => {
       switch (line.type) {
         case "comment":
           if (settings.showComments) {
-            html += `<div class="comment">${escapeHtml(line.content)}</div>`;
+            if (line.format === "italic") {
+              html += `<div class="comment comment-italic">${escapeHtml(line.content)}</div>`;
+            } else if (line.format === "box") {
+              html += `<div class="comment comment-box">${escapeHtml(line.content)}</div>`;
+            } else {
+              html += `<div class="comment">${escapeHtml(line.content)}</div>`;
+            }
           }
+          break;
+
+        case "highlight":
+          html += `<div class="highlight">${escapeHtml(line.content)}</div>`;
+          break;
+
+        case "image":
+          html += `<div class="image"><img src="${escapeHtml(line.src)}" style="max-width: ${escapeHtml(line.scale)};" alt="ChordPro Image" /></div>`;
           break;
 
         case "chordLine":
@@ -96,6 +166,35 @@ export function renderToHTML(parsedData, options = {}) {
 
         case "lyricLine":
           html += `<div class="lyric-line">${escapeHtml(line.content)}</div>`;
+          break;
+
+        case "chorusRef":
+          html += `<div class="chorus-ref">Chorus${line.label ? ': ' + escapeHtml(line.label) : ''}</div>`;
+          break;
+
+        case "chord":
+          if (parsedData.metadata && parsedData.metadata.chords && parsedData.metadata.chords[line.name]) {
+            html += `<div class="chord-diagram">
+              <div class="chord-name">${escapeHtml(line.name)}</div>
+              <div class="chord-definition">${escapeHtml(parsedData.metadata.chords[line.name])}</div>
+            </div>`;
+          } else {
+            html += `<div class="chord-diagram">
+              <div class="chord-name">${escapeHtml(line.name)}</div>
+            </div>`;
+          }
+          break;
+
+        case "pageBreak":
+          html += '<div class="page-break"></div>';
+          break;
+
+        case "physicalPageBreak":
+          html += '<div class="physical-page-break"></div>';
+          break;
+
+        case "columnBreak":
+          html += '<div class="column-break"></div>';
           break;
 
         case "empty":

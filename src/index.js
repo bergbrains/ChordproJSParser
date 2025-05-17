@@ -17,8 +17,15 @@ class ChordproJS {
       showSubtitle: true,
       showChords: true,
       showComments: true,
+      // Add transposeChords function placeholder
+      transposeChords: null,
       ...options,
     };
+
+    // Auto-register the transpose plugin if available
+    if (ChordproJS.plugins.transpose) {
+      this.use('transpose');
+    }
   }
 
   /**

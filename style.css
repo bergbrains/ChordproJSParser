@@ -17,23 +17,65 @@ iframe {
   background: #fff;
 }
 
+/* Headings and metadata */
 h1,
 h2 {
   margin: 5px 0;
 }
 
-.comment {
-  font-style: italic;
-  color: gray;
-  margin: 8px 0;
+.artist, .key {
+  margin: 5px 0;
+  color: #444;
 }
 
-#renderTarget {
-  border: 1px solid #ccc;
-  padding: 15px;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+/* Sections */
+.section {
+  margin-bottom: 20px;
 }
 
+.section-label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+.chorus {
+  border-left: 4px solid #c00;
+  padding-left: 10px;
+  background-color: #f9f9f9;
+}
+
+.bridge {
+  border-left: 4px solid #00c;
+  padding-left: 10px;
+  background-color: #f9f9f9;
+}
+
+.tab {
+  font-family: monospace;
+  white-space: pre;
+  background-color: #f5f5f5;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.grid {
+  font-family: monospace;
+  white-space: pre;
+  background-color: #f5f5f5;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.abc-content, .ly-content, .svg-content, .textblock-content {
+  font-family: monospace;
+  white-space: pre;
+  background-color: #f5f5f5;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+/* Chords and lyrics */
 pre.chord-line {
   color: #c00;
   font-weight: bold;
@@ -48,13 +90,86 @@ pre.lyric-line {
   line-height: 1.1;
 }
 
+.lyric-line, .lyric-line-only {
+  margin-bottom: 8px;
+}
+
+/* Comments and formatting */
 .comment {
   font-style: italic;
   color: gray;
   margin: 8px 0;
 }
 
-h1,
-h2 {
-  margin: 5px 0;
+.comment-italic {
+  font-style: italic;
+}
+
+.comment-box {
+  border: 1px solid #ccc;
+  padding: 5px;
+  background-color: #f9f9f9;
+}
+
+.highlight {
+  background-color: yellow;
+  padding: 2px;
+}
+
+.chorus-ref {
+  font-style: italic;
+  color: #c00;
+  margin: 8px 0;
+}
+
+/* Chord diagrams */
+.chord-diagram {
+  display: inline-block;
+  margin: 10px;
+  text-align: center;
+}
+
+.chord-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.chord-definition {
+  font-family: monospace;
+  white-space: pre;
+}
+
+/* Page breaks */
+.page-break {
+  border-top: 1px dashed #ccc;
+  margin: 20px 0;
+}
+
+.physical-page-break {
+  border-top: 2px solid #000;
+  margin: 20px 0;
+}
+
+.column-break {
+  border-left: 1px dashed #ccc;
+  margin: 0 10px;
+  height: 20px;
+  display: inline-block;
+}
+
+/* Images */
+.image {
+  margin: 10px 0;
+  text-align: center;
+}
+
+.image img {
+  max-width: 100%;
+}
+
+/* Container */
+#renderTarget {
+  border: 1px solid #ccc;
+  padding: 15px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
 }

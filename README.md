@@ -9,14 +9,88 @@ handles standard ChordPro syntax with zero dependencies, making it easy to integ
 
 - Parses standard ChordPro syntax:
     - Title, subtitle, artist, key, and other directives
-    - Environment tags (chorus, verse, etc.)
+    - Environment tags (chorus, verse, bridge, tab, grid, etc.)
     - Chords in bracket notation `[C]` rendered above lyrics
     - Comments and other metadata
+    - Chord diagrams and definitions
+    - Transposition
+    - Text formatting (highlight, italic, etc.)
+    - Page and column breaks
 - Flexible rendering:
     - To DOM elements via selector or direct element reference
     - As HTML string for further processing
+- Full support for the ChordPro specification
 - Zero dependencies
 - Available as ES module and UMD builds
+
+### Supported ChordPro Directives
+
+This library provides comprehensive support for the ChordPro file format specification, including:
+
+#### Meta-data directives
+- `title` (short: `t`) - Song title
+- `sorttitle` - Title for sorting purposes
+- `subtitle` (short: `st`) - Song subtitle
+- `artist` - Artist name
+- `composer` - Composer name
+- `lyricist` - Lyricist name
+- `copyright` - Copyright information
+- `album` - Album name
+- `year` - Year of publication
+- `key` - Song key
+- `time` - Time signature
+- `tempo` - Song tempo
+- `duration` - Song duration
+- `capo` - Capo position
+- `meta` - Custom metadata
+
+#### Formatting directives
+- `comment` (short: `c`) - Plain comment
+- `comment_italic` (short: `ci`) - Italic comment
+- `comment_box` (short: `cb`) - Boxed comment
+- `highlight` - Highlighted text
+- `image` - Embedded image
+
+#### Environment directives
+- `start_of_chorus` (short: `soc`) / `end_of_chorus` (short: `eoc`) - Chorus section
+- `chorus` - Reference to a previously defined chorus
+- `start_of_verse` (short: `sov`) / `end_of_verse` (short: `eov`) - Verse section
+- `start_of_bridge` (short: `sob`) / `end_of_bridge` (short: `eob`) - Bridge section
+- `start_of_tab` (short: `sot`) / `end_of_tab` (short: `eot`) - Tab section
+- `start_of_grid` (short: `sog`) / `end_of_grid` (short: `eog`) - Grid section
+
+#### Delegated environment directives
+- `start_of_abc` / `end_of_abc` - ABC notation
+- `start_of_ly` / `end_of_ly` - LilyPond notation
+- `start_of_svg` / `end_of_svg` - SVG content
+- `start_of_textblock` / `end_of_textblock` - Text block
+
+#### Chord diagrams
+- `define` - Define a chord diagram
+- `chord` - Display a chord diagram
+
+#### Transposition
+- `transpose` - Transpose chords by a number of semitones
+
+#### Fonts, sizes and colours
+- Various directives for controlling the appearance of different elements
+
+#### Output related directives
+- `new_page` (short: `np`) - Start a new page
+- `new_physical_page` (short: `npp`) - Start a new physical page
+- `column_break` (short: `colb`) - Start a new column
+- `pagetype` - Set the page type
+- `diagrams` - Show chord diagrams
+- `grid` (short: `g`) - Show chord grid
+- `no_grid` (short: `ng`) - Hide chord grid
+- `titles` - Show titles
+- `columns` (short: `col`) - Set number of columns
+
+#### Conditional directives
+- Support for directives with selectors (e.g., `{directive-selector: value}`)
+
+#### Custom extensions
+- Support for custom directives with the `x_` prefix
 
 ## Installation
 
@@ -33,21 +107,43 @@ npm install chordprojs
 <script src="https://cdn.jsdelivr.net/npm/chordprojs/dist/chordprojs.min.js"></script>
 ```
 
-```
+```javascript
 // Create an instance
 const chordpro = ChordproJS();
 
 // Parse ChordPro text
 const parsed = chordpro.parse(`
 {title: Amazing Grace}
+{subtitle: Traditional}
+{artist: John Newton}
+{key: G}
+{capo: 2}
+
+{start_of_verse: Verse 1}
 [G]Amazing [D]grace! How [G]sweet the [D]sound
+That [G]saved a [D]wretch like [G]me!
+I [G]once was [D]lost, but [G]now am [D]found,
+Was [G]blind, but [D]now I [G]see.
+{end_of_verse}
+
+{start_of_chorus}
+[C]Praise [G]God, [D]praise [G]God,
+[C]Praise God, [D]praise [G]God!
+{end_of_chorus}
 `);
 
 // Render to element
 chordpro.renderToElement(chordproText, '#song-container');
 
 // Get HTML string
-const html = chordpro.renderToString(chordproText);
+const html = chordpro.renderToHTML(chordproText);
+
+// Using transposition
+const transposedHtml = chordpro.parse(`
+{title: Amazing Grace}
+{transpose: 2}
+[G]Amazing [D]grace! How [G]sweet the [D]sound
+`);
 ```
 
 ### Usage notes
@@ -77,14 +173,33 @@ You can easily customize the appearance of ChordproJS output by adding your own 
 
 - `.chord-line` - Applied to chord lines (pre element)
 - `.lyric-line` - Applied to lyric lines (pre element) 
+- `.lyric-line-only` - Applied to lyric lines when chords are hidden
 - `.comment` - Applied to comment lines
-- `.chorus` - Applied to the chorus container
+- `.comment-italic` - Applied to italic comment lines
+- `.comment-box` - Applied to boxed comment lines
+- `.highlight` - Applied to highlighted text
+- `.section` - Applied to all section containers
+- `.section-label` - Applied to section labels
+- `.chorus` - Applied to chorus containers
 - `.verse` - Applied to verse containers
-- `.tab` - Applied to tab sections
 - `.bridge` - Applied to bridge sections
-- `.title` - Applied to the song title
-- `.subtitle` - Applied to subtitles
+- `.tab` - Applied to tab sections
+- `.grid` - Applied to grid sections
+- `.abc` - Applied to ABC notation sections
+- `.ly` - Applied to LilyPond notation sections
+- `.svg` - Applied to SVG content sections
+- `.textblock` - Applied to text block sections
+- `.chorus-ref` - Applied to chorus references
+- `.chord-diagram` - Applied to chord diagrams
+- `.chord-name` - Applied to chord names in diagrams
+- `.chord-definition` - Applied to chord definitions in diagrams
+- `.page-break` - Applied to page breaks
+- `.physical-page-break` - Applied to physical page breaks
+- `.column-break` - Applied to column breaks
+- `.image` - Applied to image containers
+- `.empty-line` - Applied to empty lines
 - `.artist` - Applied to artist information
+- `.key` - Applied to key information
 
 ### Example: Basic Color Customization
 

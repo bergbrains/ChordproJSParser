@@ -20,7 +20,8 @@ export const transposePlugin = {
       "B",
     ];
 
-    chordproJS.transpose = function (chordString, semitones) {
+    // Define transpose function
+    const transposeChord = function (chordString, semitones) {
       // Handle flat notation
       chordString = chordString
         .replace(/Bb/g, "A#")
@@ -45,17 +46,25 @@ export const transposePlugin = {
       return chords[newIndex] + suffix;
     };
 
-    // Extend render methods to support transposition
+    // Add transpose function to ChordproJS instance
+    chordproJS.transpose = transposeChord;
+
+    // Add transpose function to options for renderer to use
+    chordproJS.options.transposeChords = transposeChord;
+
+    // Extend parse method to support manual transposition
     const originalParse = chordproJS.parse;
     chordproJS.parse = function (text, transposeSteps = 0) {
       const parsed = originalParse.call(this, text);
 
+      // If manual transpose steps are provided, apply them
+      // (this is separate from the {transpose: N} directive)
       if (transposeSteps !== 0) {
         parsed.sections.forEach((section) => {
           section.lines.forEach((line) => {
             if (line.type === "chordLine" && line.chords) {
               line.chords = line.chords.map((chord) =>
-                this.transpose(chord, transposeSteps),
+                transposeChord(chord, transposeSteps),
               );
             }
           });
