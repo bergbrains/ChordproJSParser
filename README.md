@@ -8,17 +8,17 @@ handles standard ChordPro syntax with zero dependencies, making it easy to integ
 ## Features
 
 - Parses standard ChordPro syntax:
-    - Title, subtitle, artist, key, and other directives
-    - Environment tags (chorus, verse, bridge, tab, grid, etc.)
-    - Chords in bracket notation `[C]` rendered above lyrics
-    - Comments and other metadata
-    - Chord diagrams and definitions
-    - Transposition
-    - Text formatting (highlight, italic, etc.)
-    - Page and column breaks
+  - Title, subtitle, artist, key, and other directives
+  - Environment tags (chorus, verse, bridge, tab, grid, etc.)
+  - Chords in bracket notation `[C]` rendered above lyrics
+  - Comments and other metadata
+  - Chord diagrams and definitions
+  - Transposition
+  - Text formatting (highlight, italic, etc.)
+  - Page and column breaks
 - Flexible rendering:
-    - To DOM elements via selector or direct element reference
-    - As HTML string for further processing
+  - To DOM elements via selector or direct element reference
+  - As HTML string for further processing
 - Full support for the ChordPro specification
 - Zero dependencies
 - Available as ES module and UMD builds
@@ -28,6 +28,7 @@ handles standard ChordPro syntax with zero dependencies, making it easy to integ
 This library provides comprehensive support for the ChordPro file format specification, including:
 
 #### Meta-data directives
+
 - `title` (short: `t`) - Song title
 - `sorttitle` - Title for sorting purposes
 - `subtitle` (short: `st`) - Song subtitle
@@ -45,6 +46,7 @@ This library provides comprehensive support for the ChordPro file format specifi
 - `meta` - Custom metadata
 
 #### Formatting directives
+
 - `comment` (short: `c`) - Plain comment
 - `comment_italic` (short: `ci`) - Italic comment
 - `comment_box` (short: `cb`) - Boxed comment
@@ -52,6 +54,7 @@ This library provides comprehensive support for the ChordPro file format specifi
 - `image` - Embedded image
 
 #### Environment directives
+
 - `start_of_chorus` (short: `soc`) / `end_of_chorus` (short: `eoc`) - Chorus section
 - `chorus` - Reference to a previously defined chorus
 - `start_of_verse` (short: `sov`) / `end_of_verse` (short: `eov`) - Verse section
@@ -60,22 +63,27 @@ This library provides comprehensive support for the ChordPro file format specifi
 - `start_of_grid` (short: `sog`) / `end_of_grid` (short: `eog`) - Grid section
 
 #### Delegated environment directives
+
 - `start_of_abc` / `end_of_abc` - ABC notation
 - `start_of_ly` / `end_of_ly` - LilyPond notation
 - `start_of_svg` / `end_of_svg` - SVG content
 - `start_of_textblock` / `end_of_textblock` - Text block
 
 #### Chord diagrams
+
 - `define` - Define a chord diagram
 - `chord` - Display a chord diagram
 
 #### Transposition
+
 - `transpose` - Transpose chords by a number of semitones
 
 #### Fonts, sizes and colours
+
 - Various directives for controlling the appearance of different elements
 
 #### Output related directives
+
 - `new_page` (short: `np`) - Start a new page
 - `new_physical_page` (short: `npp`) - Start a new physical page
 - `column_break` (short: `colb`) - Start a new column
@@ -87,9 +95,11 @@ This library provides comprehensive support for the ChordPro file format specifi
 - `columns` (short: `col`) - Set number of columns
 
 #### Conditional directives
+
 - Support for directives with selectors (e.g., `{directive-selector: value}`)
 
 #### Custom extensions
+
 - Support for custom directives with the `x_` prefix
 
 ## Installation
@@ -99,9 +109,10 @@ This library provides comprehensive support for the ChordPro file format specifi
 ```bash
 npm install chordprojs
 ```
+
 ## Usage
 
-### Direct include 
+### Direct include
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/chordprojs/dist/chordprojs.min.js"></script>
@@ -133,7 +144,7 @@ Was [G]blind, but [D]now I [G]see.
 `);
 
 // Render to element
-chordpro.renderToElement(chordproText, '#song-container');
+chordpro.renderToElement(chordproText, "#song-container");
 
 // Get HTML string
 const html = chordpro.renderToHTML(chordproText);
@@ -155,10 +166,13 @@ Include the library in your web page, for example:
 ```
 <script src="https://cdn.jsdelivr.net/npm/chordprojs/dist/chordprojs.min.js"></script>
 ```
+
 Add a container element in your HTML:
+
 ```
 <div id="song-container"></div>
 ```
+
 Use the above JavaScript to parse and render ChordPro text.
 
 # Customizing Colors
@@ -172,7 +186,7 @@ You can easily customize the appearance of ChordproJS output by adding your own 
 ### Main CSS Classes
 
 - `.chord-line` - Applied to chord lines (pre element)
-- `.lyric-line` - Applied to lyric lines (pre element) 
+- `.lyric-line` - Applied to lyric lines (pre element)
 - `.lyric-line-only` - Applied to lyric lines when chords are hidden
 - `.comment` - Applied to comment lines
 - `.comment-italic` - Applied to italic comment lines
@@ -206,41 +220,41 @@ You can easily customize the appearance of ChordproJS output by adding your own 
 ```css
 /* Custom chord color */
 pre.chord-line {
-    color: #0066cc;  /* Change chord color to blue */
-    font-weight: bold;
+  color: #0066cc; /* Change chord color to blue */
+  font-weight: bold;
 }
 
 /* Custom lyric styling */
 pre.lyric-line {
-    color: #333;  /* Darker text for lyrics */
-    font-family: 'Arial', sans-serif;  /* Change font */
+  color: #333; /* Darker text for lyrics */
+  font-family: "Arial", sans-serif; /* Change font */
 }
 
 /* Custom styling for chorus sections */
 .chorus {
-    background-color: #f5f5f5;  /* Light gray background */
-    border-left: 4px solid #0066cc;  /* Blue left border */
-    padding-left: 10px;
-    margin: 10px 0;
+  background-color: #f5f5f5; /* Light gray background */
+  border-left: 4px solid #0066cc; /* Blue left border */
+  padding-left: 10px;
+  margin: 10px 0;
 }
 
 /* Custom styling for comments */
 .comment {
-    color: #6c757d;  /* Gray color for comments */
-    font-style: italic;
+  color: #6c757d; /* Gray color for comments */
+  font-style: italic;
 }
 
 /* Title styling */
 .title {
-    color: #d9534f;  /* Red color for title */
-    font-size: 1.8em;
-    font-weight: bold;
+  color: #d9534f; /* Red color for title */
+  font-size: 1.8em;
+  font-weight: bold;
 }
 
 /* Artist styling */
 .artist {
-    color: #5cb85c;  /* Green for artist name */
-    font-size: 1.2em;
+  color: #5cb85c; /* Green for artist name */
+  font-size: 1.2em;
 }
 ```
 
@@ -333,6 +347,7 @@ You can add these styles to your page in various ways:
     </style>
 </head>
 ```
+
 ### In an external CSS file:
 
 ```

@@ -84,11 +84,24 @@
             border: none;
         }
 
+        /* Song list button styles */
+        .song-list-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .song-list-buttons button {
+            font-size: 0.85rem;
+            padding: 6px 12px;
+        }
+
         /* File list styles */
         #selected-files {
             flex-grow: 1;
             overflow-y: auto;
-            max-height: calc(100vh - 250px); /* Ensure scrollability */
+            max-height: calc(100vh - 300px); /* Adjusted for button row */
             border: 1px solid #ddd;
             border-radius: 4px;
             background-color: white;
@@ -185,8 +198,7 @@
 <header class="app-header">
     <h1>ChordproJS Parser</h1>
     <div class="header-buttons">
-        <button id="open-btn">Load Files</button>
-        <button id="clear-storage-btn">Clear Storage</button>
+        <!-- Buttons moved to song list section -->
         <!-- Additional buttons can be added here -->
     </div>
 </header>
@@ -202,6 +214,13 @@
         </div>
 
         <h2>Song List</h2>
+        <div class="song-list-buttons">
+            <button id="open-btn">Load Files</button>
+            <button id="refresh-files-btn">Refresh Files</button>
+            <button id="clear-file-list-btn">Clear File List</button>
+            <button id="clear-selected-files-btn">Clear Selected Files</button>
+            <button id="clear-storage-btn">Clear Storage</button>
+        </div>
         <div id="selected-files">
             <p>No songs selected</p>
         </div>
@@ -228,6 +247,9 @@
         // DOM Elements
         const filePicker = document.getElementById('filePicker');
         const openBtn = document.getElementById('open-btn');
+        const refreshFilesBtn = document.getElementById('refresh-files-btn');
+        const clearFileListBtn = document.getElementById('clear-file-list-btn');
+        const clearSelectedFilesBtn = document.getElementById('clear-selected-files-btn');
         const clearStorageBtn = document.getElementById('clear-storage-btn');
         const filePickerArea = document.querySelector('.file-picker');
         const selectedFiles = document.getElementById('selected-files');
@@ -275,7 +297,7 @@
                     let songList = JSON.parse(localStorage.getItem('songList') || '[]');
 
                     // Check if song already exists in the list
-                    const existingIndex = songList.findIndex(item => 
+                    const existingIndex = songList.findIndex(item =>
                         item.name === metadata.name && item.lastModified === metadata.lastModified);
 
                     if (existingIndex >= 0) {
@@ -408,6 +430,23 @@
 
         toggleViewLink.addEventListener('click', toggleView);
 
+        // Refresh files button event listener
+        refreshFilesBtn.addEventListener('click', () => {
+            refreshFiles();
+        });
+
+        // Clear file list button event listener
+        clearFileListBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear the file list? This will not delete the files from storage.')) {
+                clearFileList();
+            }
+        });
+
+        // Clear selected files button event listener
+        clearSelectedFilesBtn.addEventListener('click', () => {
+            clearSelectedFiles();
+        });
+
         // Clear storage button event listener
         clearStorageBtn.addEventListener('click', () => {
             if (confirm('Are you sure you want to clear all stored songs?')) {
@@ -430,6 +469,69 @@
         });
 
         // Functions
+        // Refresh files from disk and refresh local storage
+        function refreshFiles() {
+            // Since we can't directly access the file system from the browser,
+            // we'll simulate reloading from disk by prompting the user to select files again
+            if (confirm('Do you want to reload files? This will prompt you to select files again.')) {
+                // Trigger the file picker
+                filePicker.click();
+            } else {
+                // Just reload from localStorage
+                if (fileStorage.loadSongs()) {
+                    updateFileList();
+                    toggleViewLink.style.display = 'inline-block';
+                    alert('Files refreshed from storage.');
+                } else {
+                    alert('No files found in storage.');
+                }
+            }
+        }
+
+        // Clear the file list without deleting from storage
+        function clearFileList() {
+            // Reset fileStorage files array but don't delete from localStorage
+            fileStorage.files = [];
+            fileStorage.currentFile = null;
+
+            // Update UI
+            selectedFiles.innerHTML = '<p>No files selected</p>';
+            toggleViewLink.style.display = 'none';
+            preview.style.display = 'none';
+            songContainer.innerHTML = '';
+            songContainer.style.display = 'none';
+        }
+
+        // Clear selected files from the list
+        function clearSelectedFiles() {
+            if (!fileStorage.currentFile) {
+                alert('No file selected.');
+                return;
+            }
+
+            // Get the index of the current file
+            const currentIndex = fileStorage.files.findIndex(file =>
+                file.name === fileStorage.currentFile.name &&
+                file.lastModified === fileStorage.currentFile.lastModified);
+
+            if (currentIndex >= 0) {
+                // Remove the file from the array
+                fileStorage.files.splice(currentIndex, 1);
+                fileStorage.currentFile = null;
+
+                // Update the file list
+                updateFileList();
+
+                // If no files left, hide the toggle link and clear the display
+                if (fileStorage.files.length === 0) {
+                    toggleViewLink.style.display = 'none';
+                    preview.style.display = 'none';
+                    songContainer.innerHTML = '';
+                    songContainer.style.display = 'none';
+                }
+            }
+        }
+
         function handleFileSelection(event) {
             const files = event.target.files;
 
@@ -471,6 +573,9 @@
 
                         // Show the toggle link
                         toggleViewLink.style.display = 'inline-block';
+
+                        // Close the file picker popup
+                        filePickerArea.classList.add('hidden');
                     }
                 };
                 reader.readAsText(file);

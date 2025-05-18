@@ -18,12 +18,14 @@ Create a lightweight JavaScript ChordPro parser library called "ChordproJS" with
 ### Core Features
 
 1. **Parser functionality**:
+
    - Parse standard ChordPro directives including `{title}`, `{subtitle}`, `{artist}`, `{key}`, etc.
    - Support for chorus/verse sections with `{start_of_chorus}`, `{end_of_chorus}`, etc.
    - Handle chord notation in square brackets `[C]` placing them above lyrics
    - Parse comments and other metadata
 
 2. **Rendering capabilities**:
+
    - Generate clean HTML with proper semantic structure
    - Support rendering to DOM elements via selector or direct element reference
    - Return HTML string for further processing
@@ -38,7 +40,7 @@ Create a lightweight JavaScript ChordPro parser library called "ChordproJS" with
 
 ```text
 chordprojs/
-├── dist/ 
+├── dist/
 │ ├── chordprojs.js
 │ └── chordprojs.min.js
 ├── examples/
@@ -54,6 +56,7 @@ chordprojs/
 ├── DEVELOPMENT.md
 └── LICENSE
 ```
+
 ### Build Setup
 
 - Use Rollup for bundling both ES module and UMD formats
@@ -66,7 +69,7 @@ chordprojs/
 
 ```javascript
 // Create an instance
-const chordpro = ChordproJS(); 
+const chordpro = ChordproJS();
 
 // Parse ChordPro text
 const parsed = chordpro.parse(`
@@ -75,7 +78,7 @@ const parsed = chordpro.parse(`
 `);
 
 // Render to element
-chordpro.renderToElement(chordproText, '#song-container');
+chordpro.renderToElement(chordproText, "#song-container");
 
 // Get HTML string
 const html = chordpro.renderToString(chordproText);
@@ -85,21 +88,19 @@ const html = chordpro.renderToString(chordproText);
 
 Provide basic styling with classes including:
 
-
-* `.chord-line` for chord notation
-* `.lyric-line` for lyrics
-* `.comment` for comments
-* Style headings for titles and metadata
+- `.chord-line` for chord notation
+- `.lyric-line` for lyrics
+- `.comment` for comments
+- Style headings for titles and metadata
 
 ## Documentation
 
 Include detailed documentation covering:
 
-* Installation methods
-* API reference
-* Usage examples
-* Extension points for adding features like transposition
-* Module architecture diagram showing parser/renderer flow
+- Installation methods
+- API reference
+- Usage examples
+- Extension points for adding features like transposition
+- Module architecture diagram showing parser/renderer flow
 
 Please implement this library using modern JavaScript practices, focusing on clean code and excellent documentation. The final solution should be ready for direct use in web projects.
-

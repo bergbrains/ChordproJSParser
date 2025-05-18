@@ -54,14 +54,18 @@ export function renderToHTML(parsedData, options = {}) {
   }
 
   // Apply transposition if needed
-  if (parsedData.metadata && parsedData.metadata.transpose && typeof settings.transposeChords === 'function') {
+  if (
+    parsedData.metadata &&
+    parsedData.metadata.transpose &&
+    typeof settings.transposeChords === "function"
+  ) {
     const transposeValue = parseInt(parsedData.metadata.transpose, 10);
     if (!isNaN(transposeValue)) {
-      parsedData.sections.forEach(section => {
-        section.lines.forEach(line => {
+      parsedData.sections.forEach((section) => {
+        section.lines.forEach((line) => {
           if (line.type === "chordLine" && line.chords) {
-            line.chords = line.chords.map(chord => 
-              settings.transposeChords(chord, transposeValue)
+            line.chords = line.chords.map((chord) =>
+              settings.transposeChords(chord, transposeValue),
             );
           }
         });
@@ -76,25 +80,33 @@ export function renderToHTML(parsedData, options = {}) {
       case "chorus":
         html += '<div class="section chorus">';
         if (section.label) {
-          html += `<div class="section-label">${escapeHtml(section.label)}</div>`;
+          html += `<div class="section-label">${escapeHtml(
+            section.label,
+          )}</div>`;
         }
         break;
       case "bridge":
         html += '<div class="section bridge">';
         if (section.label) {
-          html += `<div class="section-label">${escapeHtml(section.label)}</div>`;
+          html += `<div class="section-label">${escapeHtml(
+            section.label,
+          )}</div>`;
         }
         break;
       case "tab":
         html += '<div class="section tab">';
         if (section.label) {
-          html += `<div class="section-label">${escapeHtml(section.label)}</div>`;
+          html += `<div class="section-label">${escapeHtml(
+            section.label,
+          )}</div>`;
         }
         break;
       case "grid":
         html += '<div class="section grid">';
         if (section.label) {
-          html += `<div class="section-label">${escapeHtml(section.label)}</div>`;
+          html += `<div class="section-label">${escapeHtml(
+            section.label,
+          )}</div>`;
         }
         break;
       case "abc":
@@ -105,14 +117,18 @@ export function renderToHTML(parsedData, options = {}) {
         // For delegated environments, we would normally process the content
         // and embed the result. For now, we'll just display it as pre-formatted text.
         if (section.content) {
-          html += `<pre class="${section.type}-content">${escapeHtml(section.content)}</pre>`;
+          html += `<pre class="${section.type}-content">${escapeHtml(
+            section.content,
+          )}</pre>`;
         }
         break;
       case "verse":
       default:
         html += '<div class="section verse">';
         if (section.label) {
-          html += `<div class="section-label">${escapeHtml(section.label)}</div>`;
+          html += `<div class="section-label">${escapeHtml(
+            section.label,
+          )}</div>`;
         }
         break;
     }
@@ -122,9 +138,13 @@ export function renderToHTML(parsedData, options = {}) {
         case "comment":
           if (settings.showComments) {
             if (line.format === "italic") {
-              html += `<div class="comment comment-italic">${escapeHtml(line.content)}</div>`;
+              html += `<div class="comment comment-italic">${escapeHtml(
+                line.content,
+              )}</div>`;
             } else if (line.format === "box") {
-              html += `<div class="comment comment-box">${escapeHtml(line.content)}</div>`;
+              html += `<div class="comment comment-box">${escapeHtml(
+                line.content,
+              )}</div>`;
             } else {
               html += `<div class="comment">${escapeHtml(line.content)}</div>`;
             }
@@ -136,7 +156,11 @@ export function renderToHTML(parsedData, options = {}) {
           break;
 
         case "image":
-          html += `<div class="image"><img src="${escapeHtml(line.src)}" style="max-width: ${escapeHtml(line.scale)};" alt="ChordPro Image" /></div>`;
+          html += `<div class="image"><img src="${escapeHtml(
+            line.src,
+          )}" style="max-width: ${escapeHtml(
+            line.scale,
+          )};" alt="ChordPro Image" /></div>`;
           break;
 
         case "chordLine":
@@ -169,14 +193,22 @@ export function renderToHTML(parsedData, options = {}) {
           break;
 
         case "chorusRef":
-          html += `<div class="chorus-ref">Chorus${line.label ? ': ' + escapeHtml(line.label) : ''}</div>`;
+          html += `<div class="chorus-ref">Chorus${
+            line.label ? ": " + escapeHtml(line.label) : ""
+          }</div>`;
           break;
 
         case "chord":
-          if (parsedData.metadata && parsedData.metadata.chords && parsedData.metadata.chords[line.name]) {
+          if (
+            parsedData.metadata &&
+            parsedData.metadata.chords &&
+            parsedData.metadata.chords[line.name]
+          ) {
             html += `<div class="chord-diagram">
               <div class="chord-name">${escapeHtml(line.name)}</div>
-              <div class="chord-definition">${escapeHtml(parsedData.metadata.chords[line.name])}</div>
+              <div class="chord-definition">${escapeHtml(
+                parsedData.metadata.chords[line.name],
+              )}</div>
             </div>`;
           } else {
             html += `<div class="chord-diagram">

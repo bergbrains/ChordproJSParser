@@ -3,6 +3,7 @@
 ## [Unreleased] - Full ChordPro Specification Support
 
 ### Added
+
 - Complete support for all ChordPro directives according to the specification
 - Support for directive attributes in HTML-like format
 - Support for conditional directives with selectors
@@ -27,6 +28,7 @@
 - Support for custom extensions with the `x_` prefix
 
 ### Changed
+
 - Updated the parser to handle all directives according to the specification
 - Updated the renderer to properly render all directives
 - Updated the transpose plugin to integrate with the parser and renderer
@@ -34,6 +36,7 @@
 - Updated the documentation to include all supported directives
 
 ### Fixed
+
 - Fixed duplicate CSS styles
 - Fixed handling of directive attributes
 - Fixed integration between the parser, renderer, and plugins

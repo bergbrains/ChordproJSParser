@@ -32,7 +32,7 @@ export function parseChordPro(text, options = {}) {
 
       // Parse directive attributes if present
       let attributes = {};
-      if (value && value.includes('=')) {
+      if (value && value.includes("=")) {
         // Extract attributes in HTML-like format
         const attrRegex = /([a-zA-Z0-9_-]+)=["']([^"']*)["']/g;
         let attrMatch;
@@ -44,8 +44,8 @@ export function parseChordPro(text, options = {}) {
       // Handle conditional directives
       let baseDirective = directive;
       let condition = null;
-      if (directive.includes('-')) {
-        const parts = directive.split('-');
+      if (directive.includes("-")) {
+        const parts = directive.split("-");
         baseDirective = parts[0];
         condition = parts[1];
         // For now, we'll process all conditional directives
@@ -362,7 +362,8 @@ export function parseChordPro(text, options = {}) {
           song.metadata.pagetype = value;
           break;
         case "diagrams":
-          song.metadata.diagrams = value.toLowerCase() === "true" || value === "";
+          song.metadata.diagrams =
+            value.toLowerCase() === "true" || value === "";
           break;
         case "grid":
         case "g":

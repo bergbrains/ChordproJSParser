@@ -24,7 +24,7 @@ class ChordproJS {
 
     // Auto-register the transpose plugin if available
     if (ChordproJS.plugins.transpose) {
-      this.use('transpose');
+      this.use("transpose");
     }
   }
 
