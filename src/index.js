@@ -121,5 +121,6 @@ export default createChordproJS;
 
 // For UMD use
 if (typeof window !== "undefined") {
-  window.ChordproJS = createChordproJS;
+  window.ChordproJS = ChordproJS;
+  window.createChordproJS = createChordproJS;
 }
