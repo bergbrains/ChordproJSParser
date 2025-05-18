@@ -264,6 +264,7 @@
         const fileStorage = {
             files: [],
             currentFile: null,
+            selectedFiles: [],
             // Save song to localStorage
             saveSong: function(file, content) {
                 try {
@@ -471,6 +472,18 @@
         // Functions
         // Refresh files from disk and refresh local storage
         function refreshFiles() {
+            // Store the currently selected files before refreshing
+            const selectedFileIdentifiers = fileStorage.selectedFiles.map(file => ({
+                name: file.name,
+                lastModified: file.lastModified
+            }));
+
+            // Store the current file
+            const currentFileIdentifier = fileStorage.currentFile ? {
+                name: fileStorage.currentFile.name,
+                lastModified: fileStorage.currentFile.lastModified
+            } : null;
+
             // Since we can't directly access the file system from the browser,
             // we'll simulate reloading from disk by prompting the user to select files again
             if (confirm('Do you want to reload files? This will prompt you to select files again.')) {
@@ -479,7 +492,30 @@
             } else {
                 // Just reload from localStorage
                 if (fileStorage.loadSongs()) {
-                    updateFileList();
+                    // Restore selected files
+                    fileStorage.selectedFiles = [];
+                    selectedFileIdentifiers.forEach(identifier => {
+                        const matchingFile = fileStorage.files.find(file => 
+                            file.name === identifier.name && 
+                            file.lastModified === identifier.lastModified);
+
+                        if (matchingFile) {
+                            fileStorage.selectedFiles.push(matchingFile);
+                        }
+                    });
+
+                    // Restore current file
+                    if (currentFileIdentifier) {
+                        const matchingCurrentFile = fileStorage.files.find(file => 
+                            file.name === currentFileIdentifier.name && 
+                            file.lastModified === currentFileIdentifier.lastModified);
+
+                        if (matchingCurrentFile) {
+                            fileStorage.currentFile = matchingCurrentFile;
+                        }
+                    }
+
+                    updateFileList(true); // Pass true to maintain selections
                     toggleViewLink.style.display = 'inline-block';
                     alert('Files refreshed from storage.');
                 } else {
@@ -504,31 +540,35 @@
 
         // Clear selected files from the list
         function clearSelectedFiles() {
-            if (!fileStorage.currentFile) {
-                alert('No file selected.');
+            if (fileStorage.selectedFiles.length === 0) {
+                alert('No files selected.');
                 return;
             }
 
-            // Get the index of the current file
-            const currentIndex = fileStorage.files.findIndex(file =>
-                file.name === fileStorage.currentFile.name &&
-                file.lastModified === fileStorage.currentFile.lastModified);
+            // Remove all selected files from the files array
+            fileStorage.selectedFiles.forEach(selectedFile => {
+                const index = fileStorage.files.findIndex(file =>
+                    file.name === selectedFile.name &&
+                    file.lastModified === selectedFile.lastModified);
 
-            if (currentIndex >= 0) {
-                // Remove the file from the array
-                fileStorage.files.splice(currentIndex, 1);
-                fileStorage.currentFile = null;
-
-                // Update the file list
-                updateFileList();
-
-                // If no files left, hide the toggle link and clear the display
-                if (fileStorage.files.length === 0) {
-                    toggleViewLink.style.display = 'none';
-                    preview.style.display = 'none';
-                    songContainer.innerHTML = '';
-                    songContainer.style.display = 'none';
+                if (index >= 0) {
+                    fileStorage.files.splice(index, 1);
                 }
+            });
+
+            // Reset current file and selected files
+            fileStorage.currentFile = null;
+            fileStorage.selectedFiles = [];
+
+            // Update the file list
+            updateFileList();
+
+            // If no files left, hide the toggle link and clear the display
+            if (fileStorage.files.length === 0) {
+                toggleViewLink.style.display = 'none';
+                preview.style.display = 'none';
+                songContainer.innerHTML = '';
+                songContainer.style.display = 'none';
             }
         }
 
@@ -597,7 +637,7 @@
             }
         }
 
-        function updateFileList() {
+        function updateFileList(maintainSelections = false) {
             if (fileStorage.files.length === 0) {
                 selectedFiles.innerHTML = '<p>No songs selected</p>';
                 return;
@@ -607,37 +647,85 @@
             fileStorage.files.forEach((file, index) => {
                 // Use the song title if available, otherwise fall back to file name
                 const displayName = file.title || file.name;
-                html += `<div class="file-item" data-index="${index}">${displayName}</div>`;
+
+                // Check if this file should be marked as selected
+                let isSelected = false;
+                if (maintainSelections) {
+                    isSelected = fileStorage.selectedFiles.some(selectedFile => 
+                        selectedFile.name === file.name && 
+                        selectedFile.lastModified === file.lastModified);
+                }
+
+                const activeClass = isSelected ? ' active' : '';
+                html += `<div class="file-item${activeClass}" data-index="${index}">${displayName}</div>`;
             });
 
             selectedFiles.innerHTML = html;
 
             // Add click event to file items
             document.querySelectorAll('.file-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    // Remove active class from all items
-                    document.querySelectorAll('.file-item').forEach(i => {
-                        i.classList.remove('active');
-                    });
-
-                    // Add active class to clicked item
-                    item.classList.add('active');
-
+                item.addEventListener('click', (event) => {
                     const index = parseInt(item.getAttribute('data-index'));
-                    fileStorage.currentFile = fileStorage.files[index];
+                    const file = fileStorage.files[index];
 
-                    // Reset view state and link text
-                    isSourceView = false;
-                    toggleViewLink.textContent = 'View Source';
+                    // Check if Command/Ctrl key is pressed
+                    const isModifierKeyPressed = event.metaKey || event.ctrlKey;
 
-                    // Automatically render the selected file
-                    renderChordPro();
+                    if (!isModifierKeyPressed) {
+                        // If no modifier key, clear all selections
+                        document.querySelectorAll('.file-item').forEach(i => {
+                            i.classList.remove('active');
+                        });
+                        fileStorage.selectedFiles = [];
+
+                        // Select only the clicked item
+                        item.classList.add('active');
+                        fileStorage.selectedFiles.push(file);
+
+                        // Set as current file and render
+                        fileStorage.currentFile = file;
+
+                        // Reset view state and link text
+                        isSourceView = false;
+                        toggleViewLink.textContent = 'View Source';
+
+                        // Render the selected file
+                        renderChordPro();
+                    } else {
+                        // If modifier key is pressed, toggle selection
+                        item.classList.toggle('active');
+
+                        // Update selectedFiles array
+                        if (item.classList.contains('active')) {
+                            // Add to selectedFiles if not already there
+                            if (!fileStorage.selectedFiles.includes(file)) {
+                                fileStorage.selectedFiles.push(file);
+                            }
+                        } else {
+                            // Remove from selectedFiles
+                            fileStorage.selectedFiles = fileStorage.selectedFiles.filter(f => 
+                                f.name !== file.name || f.lastModified !== file.lastModified);
+                        }
+
+                        // If no current file is set, set the first selected file as current
+                        if (!fileStorage.currentFile && fileStorage.selectedFiles.length > 0) {
+                            fileStorage.currentFile = fileStorage.selectedFiles[0];
+
+                            // Reset view state and link text
+                            isSourceView = false;
+                            toggleViewLink.textContent = 'View Source';
+
+                            // Render the selected file
+                            renderChordPro();
+                        }
+                    }
                 });
             });
 
-            // Select first file by default
-            if (fileStorage.files.length > 0) {
+            // Select first file by default if no selections are maintained
+            if (fileStorage.files.length > 0 && !maintainSelections) {
                 fileStorage.currentFile = fileStorage.files[0];
+                fileStorage.selectedFiles = [fileStorage.files[0]]; // Initialize selectedFiles with first file
                 document.querySelector('.file-item').classList.add('active');
 
                 // Reset view state and link text
@@ -645,6 +733,9 @@
                 toggleViewLink.textContent = 'View Source';
 
                 renderChordPro(); // Automatically render the first file
+            } else if (maintainSelections && fileStorage.currentFile) {
+                // If maintaining selections and we have a current file, render it
+                renderChordPro();
             }
         }
 
