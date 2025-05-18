@@ -217,8 +217,7 @@
         <div class="song-list-buttons">
             <button id="open-btn">Load Files</button>
             <button id="refresh-files-btn">Refresh Files</button>
-            <button id="clear-file-list-btn">Clear File List</button>
-            <button id="clear-selected-files-btn">Clear Selected Files</button>
+            <button id="clear-files-btn">Clear Files</button>
             <button id="clear-storage-btn">Clear Storage</button>
         </div>
         <div id="selected-files">
@@ -248,8 +247,7 @@
         const filePicker = document.getElementById('filePicker');
         const openBtn = document.getElementById('open-btn');
         const refreshFilesBtn = document.getElementById('refresh-files-btn');
-        const clearFileListBtn = document.getElementById('clear-file-list-btn');
-        const clearSelectedFilesBtn = document.getElementById('clear-selected-files-btn');
+        const clearFilesBtn = document.getElementById('clear-files-btn');
         const clearStorageBtn = document.getElementById('clear-storage-btn');
         const filePickerArea = document.querySelector('.file-picker');
         const selectedFiles = document.getElementById('selected-files');
@@ -436,16 +434,16 @@
             refreshFiles();
         });
 
-        // Clear file list button event listener
-        clearFileListBtn.addEventListener('click', () => {
-            if (confirm('Are you sure you want to clear the file list? This will not delete the files from storage.')) {
-                clearFileList();
+        // Clear files button event listener
+        clearFilesBtn.addEventListener('click', () => {
+            // If there are selected files, clear only those, otherwise clear all files
+            if (fileStorage.selectedFiles.length > 0) {
+                clearSelectedFiles();
+            } else {
+                if (confirm('Are you sure you want to clear the file list? This will not delete the files from storage.')) {
+                    clearFileList();
+                }
             }
-        });
-
-        // Clear selected files button event listener
-        clearSelectedFilesBtn.addEventListener('click', () => {
-            clearSelectedFiles();
         });
 
         // Clear storage button event listener
@@ -495,8 +493,8 @@
                     // Restore selected files
                     fileStorage.selectedFiles = [];
                     selectedFileIdentifiers.forEach(identifier => {
-                        const matchingFile = fileStorage.files.find(file => 
-                            file.name === identifier.name && 
+                        const matchingFile = fileStorage.files.find(file =>
+                            file.name === identifier.name &&
                             file.lastModified === identifier.lastModified);
 
                         if (matchingFile) {
@@ -506,8 +504,8 @@
 
                     // Restore current file
                     if (currentFileIdentifier) {
-                        const matchingCurrentFile = fileStorage.files.find(file => 
-                            file.name === currentFileIdentifier.name && 
+                        const matchingCurrentFile = fileStorage.files.find(file =>
+                            file.name === currentFileIdentifier.name &&
                             file.lastModified === currentFileIdentifier.lastModified);
 
                         if (matchingCurrentFile) {
@@ -651,8 +649,8 @@
                 // Check if this file should be marked as selected
                 let isSelected = false;
                 if (maintainSelections) {
-                    isSelected = fileStorage.selectedFiles.some(selectedFile => 
-                        selectedFile.name === file.name && 
+                    isSelected = fileStorage.selectedFiles.some(selectedFile =>
+                        selectedFile.name === file.name &&
                         selectedFile.lastModified === file.lastModified);
                 }
 
@@ -703,7 +701,7 @@
                             }
                         } else {
                             // Remove from selectedFiles
-                            fileStorage.selectedFiles = fileStorage.selectedFiles.filter(f => 
+                            fileStorage.selectedFiles = fileStorage.selectedFiles.filter(f =>
                                 f.name !== file.name || f.lastModified !== file.lastModified);
                         }
 

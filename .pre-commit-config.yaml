@@ -1,7 +1,7 @@
 # .pre-commit-config.yaml
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -10,18 +10,19 @@ repos:
       - id: check-merge-conflict
       - id: check-added-large-files
 
-#  - repo: https://github.com/pre-commit/mirrors-eslint
-#    rev: v8.38.0
-#    hooks:
-#      - id: eslint
-#        files: \.[jt]sx?$  # match JavaScript and TypeScript files
-#        types: [ file ]
-#        additional_dependencies:
-#          - eslint
-#          - eslint-config-prettier
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v9.27.0
+    hooks:
+      - id: eslint
+        files: \.[jt]sx?$  # match JavaScript and TypeScript files
+        types: [ file ]
+        additional_dependencies:
+          - eslint
+          - eslint-config-prettier
+          - '@eslint/js'
 
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.0-alpha.9-for-vscode
+    rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
         types_or: [ javascript, jsx, ts, tsx, json, css, markdown ]
