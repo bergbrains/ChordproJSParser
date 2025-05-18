@@ -435,22 +435,46 @@
 
             if (files.length === 0) return;
 
-            fileStorage.files = Array.from(files);
+            // Convert FileList to Array
+            const fileArray = Array.from(files);
 
-            // Save each file to localStorage
-            Array.from(files).forEach(file => {
+            // Track how many files have been processed
+            let processedCount = 0;
+
+            // Process each file
+            fileArray.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const content = e.target.result;
+
+                    // Parse the content to get the song title
+                    try {
+                        const parsedSong = chordpro.parse(content);
+                        if (parsedSong && parsedSong.title) {
+                            // Set the title property directly on the file object
+                            file.title = parsedSong.title;
+                        }
+                    } catch (parseError) {
+                        console.warn('Could not parse song title:', parseError);
+                    }
+
+                    // Save to localStorage
                     fileStorage.saveSong(file, content);
+
+                    // Increment processed count
+                    processedCount++;
+
+                    // If all files have been processed, update the file list
+                    if (processedCount === fileArray.length) {
+                        fileStorage.files = fileArray;
+                        updateFileList();
+
+                        // Show the toggle link
+                        toggleViewLink.style.display = 'inline-block';
+                    }
                 };
                 reader.readAsText(file);
             });
-
-            updateFileList();
-
-            // Show the toggle link
-            toggleViewLink.style.display = 'inline-block';
         }
 
         // Toggle between source and rendered views
