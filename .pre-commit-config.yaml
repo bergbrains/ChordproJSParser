@@ -16,11 +16,11 @@ repos:
     hooks:
       - id: eslint
         files: \.[jt]sx?$  # match JavaScript and TypeScript files
-        exclude: ^dist/
+        exclude: '.*dist\/.*'
         types: [ file ]
+
         additional_dependencies:
           - eslint
-          - eslint-config-prettier
           - '@eslint/js'
 
   - repo: https://github.com/pre-commit/mirrors-prettier

@@ -6,7 +6,15 @@ export default [
   eslint.configs.recommended,
   prettier,
   {
-    ignores: ['dist/**', 'babel.config.js', 'jest.config.js', 'tests/mocks/**'],
+    ignores: [
+      'dist/**',
+      'coverage/**',
+      'babel.config.js',
+      'jest.config.js',
+      'tests/mocks/**'
+    ]
+  },
+  {
     languageOptions: {
       ecmaVersion: 2021,
       sourceType: 'module',
