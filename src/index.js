@@ -1,8 +1,8 @@
 // src/index.js
 /* global window */
-import { parseChordPro } from "./core/parser";
-import { renderToElement, renderToHTML } from "./core/renderer";
-import "../style.css";
+import { parseChordPro } from './core/parser';
+import { renderToElement, renderToHTML } from './core/renderer';
+import '../style.css';
 
 /**
  * Main ChordproJS class
@@ -20,12 +20,12 @@ class ChordproJS {
       showComments: true,
       // Add transposeChords function placeholder
       transposeChords: null,
-      ...options,
+      ...options
     };
 
     // Auto-register the transpose plugin if available
     if (ChordproJS.plugins.transpose) {
-      this.use("transpose");
+      this.use('transpose');
     }
   }
 
@@ -121,7 +121,7 @@ export { ChordproJS, createChordproJS };
 export default createChordproJS;
 
 // For UMD use
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   window.ChordproJS = ChordproJS;
   window.createChordproJS = createChordproJS;
 }
