@@ -34,11 +34,17 @@ export default [
     },
     rules: {
       'no-unused-vars': 'warn',
-      'no-console': 'warn',
+      'no-console': ['warn', { allow: ['error', 'warn'] }],
       quotes: ['error', 'single'],
       semi: ['error', 'always'],
       indent: ['error', 2],
       'comma-dangle': ['error', 'never']
+    }
+  },
+  {
+    files: ['**/tests/**/*.js'],
+    rules: {
+      'no-console': 'off'
     }
   }
 ];

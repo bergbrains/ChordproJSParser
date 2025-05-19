@@ -4,7 +4,7 @@
  * Plugin for transposing chords
  */
 export const transposePlugin = {
-  install(chordproJS, options = {}) {
+  install(chordproJS) {
     // Define chord mapping for transposition
     const chords = [
       'C',
