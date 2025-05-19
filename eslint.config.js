@@ -22,7 +22,6 @@ export default [
         afterEach: true,
         beforeAll: true,
         afterAll: true,
-        jest: true,
       },
     },
     rules: {
