@@ -1,9 +1,13 @@
 // src/plugins/transpose.js
+/* global window */
 /**
  * Plugin for transposing chords
  */
 export const transposePlugin = {
-  install(chordproJS, options = {}) {
+  install(
+    chordproJS,
+    /* eslint-disable-next-line no-unused-vars */ options = {},
+  ) {
     // Define chord mapping for transposition
     const chords = [
       "C",

@@ -2,6 +2,7 @@
   "name": "chordprojs",
   "version": "1.0.0",
   "description": "ChordPro file parser and renderer for JavaScript",
+  "type": "module",
   "main": "dist/chordprojs.min.js",
   "module": "dist/chordprojs.esm.js",
   "types": "dist/types/index.d.ts",
@@ -24,7 +25,7 @@
     "lyrics",
     "parser"
   ],
-  "author": "Your Name",
+  "author": "Eric Berg <eberg@bergbrains.com>",
   "license": "MIT",
   "devDependencies": {
     "@babel/preset-env": "^7.27.2",

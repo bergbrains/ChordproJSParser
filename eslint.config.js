@@ -6,6 +6,7 @@ export default [
   eslint.configs.recommended,
   prettier,
   {
+    ignores: ["dist/**", "babel.config.js", "jest.config.js", "tests/mocks/**"],
     languageOptions: {
       ecmaVersion: 2021,
       sourceType: "module",
@@ -14,7 +15,15 @@ export default [
         es2021: true,
         node: true,
         jest: true,
-      },
+        describe: true,
+        test: true,
+        expect: true,
+        beforeEach: true,
+        afterEach: true,
+        beforeAll: true,
+        afterAll: true,
+        jest: true
+      }
     },
     rules: {
       "no-unused-vars": "warn",

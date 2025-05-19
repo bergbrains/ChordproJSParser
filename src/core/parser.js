@@ -5,7 +5,10 @@
  * @param {object} options - Parsing options
  * @returns {object} Structured song data
  */
-export function parseChordPro(text, options = {}) {
+export function parseChordPro(
+  text,
+  /* eslint-disable-next-line no-unused-vars */ options = {},
+) {
   const lines = text.split("\n");
   const song = {
     title: "",
@@ -43,6 +46,7 @@ export function parseChordPro(text, options = {}) {
 
       // Handle conditional directives
       let baseDirective = directive;
+      /* eslint-disable-next-line no-unused-vars */
       let condition = null;
       if (directive.includes("-")) {
         const parts = directive.split("-");
@@ -268,7 +272,7 @@ export function parseChordPro(text, options = {}) {
           break;
 
         // Chord diagrams
-        case "define":
+        case "define": {
           const chordMatch = value.match(/^(\S+)\s+(.*)$/);
           if (chordMatch) {
             const chordName = chordMatch[1];
@@ -279,6 +283,7 @@ export function parseChordPro(text, options = {}) {
             song.metadata.chords[chordName] = chordDef;
           }
           break;
+        }
         case "chord":
           currentSection.lines.push({
             type: "chord",
@@ -322,7 +327,7 @@ export function parseChordPro(text, options = {}) {
         case "textcolour":
         case "titlefont":
         case "titlesize":
-        case "titlecolour":
+        case "titlecolour": {
           // Store formatting directives in metadata
           const category = baseDirective.replace(/font|size|colour/g, "");
           const property = baseDirective.replace(category, "");
@@ -334,6 +339,7 @@ export function parseChordPro(text, options = {}) {
           }
           song.metadata.formatting[category][property] = value;
           break;
+        }
 
         // Output related directives
         case "new_song":

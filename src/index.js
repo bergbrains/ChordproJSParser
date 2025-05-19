@@ -1,4 +1,5 @@
 // src/index.js
+/* global window */
 import { parseChordPro } from "./core/parser";
 import { renderToElement, renderToHTML } from "./core/renderer";
 import "../style.css";
