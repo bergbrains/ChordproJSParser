@@ -7,7 +7,7 @@ node_modules/
 #yarn.lock
 
 # Testing
-#coverage/
+coverage/
 
 # Editor directories and files
 .idea/
@@ -33,4 +33,4 @@ tmp/
 temp/
 
 # Do NOT ignore dist directory as it's needed for examples
-# dist/
+dist/

@@ -5,10 +5,7 @@
  * @param {object} options - Parsing options
  * @returns {object} Structured song data
  */
-export function parseChordPro(
-  text,
-  /* eslint-disable-next-line no-unused-vars */ options = {},
-) {
+export function parseChordPro(text, options = {}) {
   const lines = text.split("\n");
   const song = {
     title: "",
@@ -46,7 +43,7 @@ export function parseChordPro(
 
       // Handle conditional directives
       let baseDirective = directive;
-      /* eslint-disable-next-line no-unused-vars */
+
       let condition = null;
       if (directive.includes("-")) {
         const parts = directive.split("-");

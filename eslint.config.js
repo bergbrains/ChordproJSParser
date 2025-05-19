@@ -22,8 +22,8 @@ export default [
         afterEach: true,
         beforeAll: true,
         afterAll: true,
-        jest: true
-      }
+        jest: true,
+      },
     },
     rules: {
       "no-unused-vars": "warn",
