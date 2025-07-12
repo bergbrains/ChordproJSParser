@@ -87,7 +87,7 @@
 
 <div class="file-picker">
     <p>Select ChordPro files to parse and display</p>
-    <input type="file" id="filePicker" accept=".cho,.chordpro,.txt" multiple>
+    <input type="file" id="filePicker" accept=".pro,.cho,.chordpro,.txt" multiple>
     <p>or drag and drop files here</p>
 </div>
 
@@ -130,7 +130,7 @@
         };
 
         // Create an instance of ChordproJS
-        const chordpro = ChordproJS();
+        const chordpro = new ChordproJS();
 
         // Event Listeners
         filePicker.addEventListener('change', handleFileSelection);
