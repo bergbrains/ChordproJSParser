@@ -4,12 +4,14 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-docstring-first
       - id: check-json
       - id: check-merge-conflict
-      - id: check-added-large-files
+      - id: check-shebang-scripts-are-executable
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
 
   - repo: https://github.com/pre-commit/mirrors-eslint
     rev: v9.31.0
@@ -35,3 +37,11 @@ repos:
         language: system
         pass_filenames: false
         types: [ javascript ]
+  - repo: local
+    hooks:
+      - id: test-github-workflows
+        name: Test GitHub Workflows with act
+        entry: ./scripts/test-github-workflows.sh
+        language: script
+        files: .pre-commit-config.yaml$
+        verbose: true
