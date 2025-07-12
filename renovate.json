@@ -1,0 +1,37 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "assigneesFromCodeOwners": true,
+  "baseBranches": ["main", "master"],
+  "commitMessagePrefix": "[renovate] ",
+  "dependencyDashboardAutoclose": false,
+  "enabledManagers": ["npm", "yarn", "github-actions"],
+  "extends": [
+    ":assignee(@Bergbrains)",
+    ":dependencyDashboardApproval",
+    ":preserveSemverRanges",
+    ":rebaseStalePrs",
+    ":semanticCommits",
+    "config:best-practices",
+    "group:recommended"
+  ],
+  "labels": ["Renovate[bot]"],
+  "major": {
+    "dependencyDashboardApproval": true
+  },
+  "packageRules": [
+    {
+      "groupName": "Development Dependencies",
+      "matchDepTypes": ["devDependencies"],
+      "matchManagers": ["npm"],
+      "automerge": true,
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "ignoreTests": true
+    }
+  ],
+  "prCreation": "immediate",
+  "schedule": ["every weekend"],
+  "timezone": "America/New_York",
+  "vulnerabilityAlerts": {
+    "enabled": true
+  }
+}
