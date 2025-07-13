@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChordproJS File Picker Example</title>
+    <link rel="stylesheet" href="../style.css">
     <style>
         body {
             font-family: sans-serif;
@@ -48,7 +49,7 @@
             width: 25%;
             border-right: 4px solid #ccc;
             overflow-y: auto;
-            padding: 15px;
+            padding: 10px;
             background-color: #f5f5f5;
             resize: horizontal;
             display: flex;
@@ -60,6 +61,43 @@
             width: 75%;
             overflow-y: auto;
             padding: 15px;
+            position: relative;
+        }
+
+        /* Zoom controls */
+        .zoom-controls {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .zoom-button {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .zoom-button:hover {
+            background-color: #e0e0e0;
+        }
+
+        .fullscreen-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .fullscreen-button:hover {
+            background-color: #e0e0e0;
         }
 
         /* File picker styles */
@@ -84,17 +122,61 @@
             border: none;
         }
 
-        /* Song list button styles */
-        .song-list-buttons {
+        /* Song list header and gear menu */
+        .song-list-header {
             display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 10px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
         }
 
-        .song-list-buttons button {
-            font-size: 0.85rem;
-            padding: 6px 12px;
+        .gear-menu {
+            position: relative;
+        }
+
+        .gear-button {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .gear-menu-dropdown {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            z-index: 10;
+            min-width: 150px;
+        }
+
+        .gear-menu-dropdown.show {
+            display: flex;
+        }
+
+        .gear-menu-dropdown button {
+            text-align: left;
+            padding: 8px 12px;
+            background: none;
+            border: none;
+            border-bottom: 1px solid #eee;
+            color: #333;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .gear-menu-dropdown button:last-child {
+            border-bottom: none;
+        }
+
+        .gear-menu-dropdown button:hover {
+            background-color: #f5f5f5;
         }
 
         /* File list styles */
@@ -108,7 +190,7 @@
         }
 
         .file-item {
-            padding: 12px 15px;
+            padding: 8px 10px;
             border-bottom: 1px solid #eee;
             cursor: pointer;
             transition: background-color 0.2s;
@@ -153,30 +235,7 @@
             color: #004499;
         }
 
-        /* Song display styles */
-        pre.chord-line {
-            color: #c00;
-            font-weight: bold;
-            font-family: monospace;
-            margin: 0;
-            line-height: 1.1;
-        }
-
-        pre.lyric-line {
-            margin: 0 0 8px 0;
-            font-family: monospace;
-            line-height: 1.1;
-        }
-
-        .comment {
-            font-style: italic;
-            color: gray;
-            margin: 8px 0;
-        }
-
-        h1, h2 {
-            margin: 5px 0;
-        }
+        /* Song display styles are now imported from the main stylesheet */
 
         #preview {
             white-space: pre-wrap;
@@ -213,12 +272,17 @@
             <p>or drag and drop files here</p>
         </div>
 
-        <h2>Song List</h2>
-        <div class="song-list-buttons">
-            <button id="open-btn">Load Files</button>
-            <button id="refresh-files-btn">Refresh Files</button>
-            <button id="clear-files-btn">Clear Files</button>
-            <button id="clear-storage-btn">Clear Storage</button>
+        <div class="song-list-header">
+            <h2>Song List</h2>
+            <div class="gear-menu">
+                <button id="gear-btn" class="gear-button">⚙️</button>
+                <div id="gear-menu-dropdown" class="gear-menu-dropdown">
+                    <button id="open-btn">Load Files</button>
+                    <button id="refresh-files-btn">Refresh Files</button>
+                    <button id="clear-files-btn">Clear Files</button>
+                    <button id="clear-storage-btn">Clear Storage</button>
+                </div>
+            </div>
         </div>
         <div id="selected-files">
             <p>No songs selected</p>
@@ -227,8 +291,16 @@
 
     <!-- Right column - Song display -->
     <div class="song-display-column">
+        <button id="fullscreen-btn" class="fullscreen-button">⛶ Full Screen</button>
+
         <div class="controls">
             <a id="toggle-view-link" class="toggle-link" style="display: none;">View Source</a>
+        </div>
+
+        <div class="zoom-controls">
+            <button id="zoom-in-btn" class="zoom-button">🔍+</button>
+            <button id="zoom-reset-btn" class="zoom-button">🔍 Reset</button>
+            <button id="zoom-out-btn" class="zoom-button">🔍-</button>
         </div>
 
         <pre id="preview"></pre>
@@ -254,6 +326,14 @@
         const toggleViewLink = document.getElementById('toggle-view-link');
         const preview = document.getElementById('preview');
         const songContainer = document.getElementById('song-container');
+
+        // New UI elements
+        const gearBtn = document.getElementById('gear-btn');
+        const gearMenuDropdown = document.getElementById('gear-menu-dropdown');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const zoomInBtn = document.getElementById('zoom-in-btn');
+        const zoomOutBtn = document.getElementById('zoom-out-btn');
+        const zoomResetBtn = document.getElementById('zoom-reset-btn');
 
         // Track current view state
         let isSourceView = false;
@@ -406,9 +486,58 @@
         // Initialize file picker as hidden
         filePickerArea.classList.add('hidden');
 
+        // Gear menu functionality
+        gearBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent click from bubbling to document
+            gearMenuDropdown.classList.toggle('show');
+        });
+
+        // Close gear menu when clicking outside
+        document.addEventListener('click', () => {
+            if (gearMenuDropdown.classList.contains('show')) {
+                gearMenuDropdown.classList.remove('show');
+            }
+        });
+
+        // Prevent clicks inside dropdown from closing it
+        gearMenuDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
         // Load button toggles file picker visibility
         openBtn.addEventListener('click', () => {
             filePickerArea.classList.toggle('hidden');
+            gearMenuDropdown.classList.remove('show');
+        });
+
+        // Fullscreen functionality
+        fullscreenBtn.addEventListener('click', () => {
+            toggleFullScreen();
+        });
+
+        // Zoom controls
+        let currentZoom = 1.0;
+        const zoomStep = 0.1;
+        const maxZoom = 2.0;
+        const minZoom = 0.5;
+
+        zoomInBtn.addEventListener('click', () => {
+            if (currentZoom < maxZoom) {
+                currentZoom += zoomStep;
+                applyZoom();
+            }
+        });
+
+        zoomOutBtn.addEventListener('click', () => {
+            if (currentZoom > minZoom) {
+                currentZoom -= zoomStep;
+                applyZoom();
+            }
+        });
+
+        zoomResetBtn.addEventListener('click', () => {
+            currentZoom = 1.0;
+            applyZoom();
         });
 
         // Drag and drop support
@@ -468,6 +597,46 @@
         });
 
         // Functions
+        // Toggle fullscreen mode
+        function toggleFullScreen() {
+            const songDisplayColumn = document.querySelector('.song-display-column');
+
+            if (!document.fullscreenElement) {
+                // Enter fullscreen
+                if (songDisplayColumn.requestFullscreen) {
+                    songDisplayColumn.requestFullscreen();
+                } else if (songDisplayColumn.webkitRequestFullscreen) { /* Safari */
+                    songDisplayColumn.webkitRequestFullscreen();
+                } else if (songDisplayColumn.msRequestFullscreen) { /* IE11 */
+                    songDisplayColumn.msRequestFullscreen();
+                }
+                fullscreenBtn.textContent = "⛶ Exit Full";
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
+                }
+                fullscreenBtn.textContent = "⛶ Full Screen";
+            }
+        }
+
+        // Listen for fullscreen change events
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                fullscreenBtn.textContent = "⛶ Full Screen";
+            }
+        });
+
+        // Apply zoom level to song container
+        function applyZoom() {
+            songContainer.style.transform = `scale(${currentZoom})`;
+            songContainer.style.transformOrigin = 'top left';
+        }
+
         // Refresh files from disk and refresh local storage
         function refreshFiles() {
             // Store the currently selected files before refreshing

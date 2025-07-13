@@ -30,8 +30,10 @@ h2 {
 }
 
 /* Sections */
+/* Common base styling for all sections */
 .section {
   margin-bottom: 20px;
+  padding-left: 10px;
 }
 
 .section-label {
@@ -40,32 +42,31 @@ h2 {
   color: #555;
 }
 
+/* Specific section types with unique border colors */
 .chorus {
-  border-left: 4px solid #c00;
-  padding-left: 10px;
-  background-color: #f9f9f9;
+  border-left: 4px solid #c00; /* Red */
+}
+
+.verse {
+  border-left: 4px solid #090; /* Green */
 }
 
 .bridge {
-  border-left: 4px solid #00c;
-  padding-left: 10px;
-  background-color: #f9f9f9;
+  border-left: 4px solid #00c; /* Blue */
 }
 
-.tab {
+/* Special sections that need monospace */
+.tab,
+.grid,
+.abc,
+.ly,
+.svg,
+.textblock {
   font-family: monospace;
   white-space: pre;
-  background-color: #f5f5f5;
   padding: 10px;
   border-radius: 4px;
-}
-
-.grid {
-  font-family: monospace;
-  white-space: pre;
-  background-color: #f5f5f5;
-  padding: 10px;
-  border-radius: 4px;
+  border-left: 4px solid #666; /* Gray */
 }
 
 .abc-content,
@@ -74,7 +75,6 @@ h2 {
 .textblock-content {
   font-family: monospace;
   white-space: pre;
-  background-color: #f5f5f5;
   padding: 10px;
   border-radius: 4px;
 }
@@ -97,23 +97,26 @@ pre.lyric-line {
 .lyric-line,
 .lyric-line-only {
   margin-bottom: 8px;
+  font-family: monospace;
+  line-height: 1.1;
 }
 
 /* Comments and formatting */
+/* Base comment style */
 .comment {
   font-style: italic;
   color: gray;
   margin: 8px 0;
 }
 
+/* Additional comment styles when specifically needed */
 .comment-italic {
-  font-style: italic;
+  /* Already italic from base .comment style */
 }
 
 .comment-box {
   border: 1px solid #ccc;
   padding: 5px;
-  background-color: #f9f9f9;
 }
 
 .highlight {
