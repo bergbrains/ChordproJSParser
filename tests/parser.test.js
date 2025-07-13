@@ -382,7 +382,7 @@ describe('ChordPro Parser', () => {
       const text = '{grid: true}\n{no_grid:}';
       const result = parseChordPro(text);
       // The parser doesn't set grid to false for no_grid
-      expect(result.metadata.grid).toBe(true);
+      expect(result.metadata.grid).toBe(false);
     });
 
     test('should parse abbreviated no_grid directive after grid', () => {
