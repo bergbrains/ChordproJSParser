@@ -1,33 +1,35 @@
 // src/plugins/transpose.js
+/* global window */
 /**
  * Plugin for transposing chords
  */
 export const transposePlugin = {
-  install(chordproJS, options = {}) {
+  install(chordproJS) {
     // Define chord mapping for transposition
     const chords = [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B",
+      'C',
+      'C#',
+      'D',
+      'D#',
+      'E',
+      'F',
+      'F#',
+      'G',
+      'G#',
+      'A',
+      'A#',
+      'B'
     ];
 
-    chordproJS.transpose = function (chordString, semitones) {
+    // Define transpose function
+    const transposeChord = function (chordString, semitones) {
       // Handle flat notation
       chordString = chordString
-        .replace(/Bb/g, "A#")
-        .replace(/Db/g, "C#")
-        .replace(/Eb/g, "D#")
-        .replace(/Gb/g, "F#")
-        .replace(/Ab/g, "G#");
+        .replace(/Bb/g, 'A#')
+        .replace(/Db/g, 'C#')
+        .replace(/Eb/g, 'D#')
+        .replace(/Gb/g, 'F#')
+        .replace(/Ab/g, 'G#');
 
       // Extract root note and suffix
       const regex = /^([A-G][#]?)(.*)$/;
@@ -45,17 +47,25 @@ export const transposePlugin = {
       return chords[newIndex] + suffix;
     };
 
-    // Extend render methods to support transposition
+    // Add transpose function to ChordproJS instance
+    chordproJS.transpose = transposeChord;
+
+    // Add transpose function to options for renderer to use
+    chordproJS.options.transposeChords = transposeChord;
+
+    // Extend parse method to support manual transposition
     const originalParse = chordproJS.parse;
     chordproJS.parse = function (text, transposeSteps = 0) {
       const parsed = originalParse.call(this, text);
 
+      // If manual transpose steps are provided, apply them
+      // (this is separate from the {transpose: N} directive)
       if (transposeSteps !== 0) {
         parsed.sections.forEach((section) => {
           section.lines.forEach((line) => {
-            if (line.type === "chordLine" && line.chords) {
+            if (line.type === 'chordLine' && line.chords) {
               line.chords = line.chords.map((chord) =>
-                this.transpose(chord, transposeSteps),
+                transposeChord(chord, transposeSteps)
               );
             }
           });
@@ -64,10 +74,10 @@ export const transposePlugin = {
 
       return parsed;
     };
-  },
+  }
 };
 
 // Register if in browser context
-if (typeof window !== "undefined" && window.ChordproJS) {
-  window.ChordproJS.registerPlugin("transpose", transposePlugin);
+if (typeof window !== 'undefined' && window.ChordproJS) {
+  window.ChordproJS.registerPlugin('transpose', transposePlugin);
 }

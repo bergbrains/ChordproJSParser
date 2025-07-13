@@ -2,9 +2,7 @@
 
 ## Overview
 
-The ChordPro JS Renderer is a JavaScript module designed to easily integrate ChordPro-formatted song files into any web
-application. It parses standard ChordPro files and dynamically renders them into HTML, allowing customizable styling
-through CSS.
+The ChordPro JS Renderer is a JavaScript module designed to easily integrate ChordPro-formatted song files into any web application. It parses standard ChordPro files and dynamically renders them into HTML, allowing customizable styling through CSS.
 
 ---
 
