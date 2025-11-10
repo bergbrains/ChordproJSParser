@@ -23,7 +23,7 @@ repos:
     rev: v9.39.1
     hooks:
       - id: eslint
-        args: [--fix]
+        args: [ --no-warn-ignored, --fix ]
         files: \.[jt]sx?$  # match JavaScript and TypeScript files
         exclude: '.*dist\/.*'
         types: [ file ]
