@@ -287,6 +287,9 @@ describe("ChordPro Parser", () => {
       const result = parseChordPro(text);
       expect(result.sections[1].type).toBe("abc");
       expect(result.sections[1].inProgress).toBe(false);
+      expect(result.sections[1].content).toBe(
+        "X:1\nT:Example\nM:4/4\nL:1/8\nK:C\n|:C2D2E2F2|G2A2B2c2:|"
+      );
     });
 
     test("should parse textblock section", () => {
@@ -295,6 +298,31 @@ describe("ChordPro Parser", () => {
       const result = parseChordPro(text);
       expect(result.sections[1].type).toBe("textblock");
       expect(result.sections[1].inProgress).toBe(false);
+      expect(result.sections[1].content).toBe(
+        "This is a text block\nwith multiple lines"
+      );
+    });
+
+    test("should parse ly section", () => {
+      const text =
+        "{start_of_ly}\n\\version \"2.18.2\"\n\\relative c' { c4 d e f }\n{end_of_ly}";
+      const result = parseChordPro(text);
+      expect(result.sections[1].type).toBe("ly");
+      expect(result.sections[1].inProgress).toBe(false);
+      expect(result.sections[1].content).toBe(
+        '\\version "2.18.2"\n\\relative c\' { c4 d e f }'
+      );
+    });
+
+    test("should parse svg section", () => {
+      const text =
+        "{start_of_svg}\n<svg width=\"100\" height=\"100\">\n<circle cx=\"50\" cy=\"50\" r=\"40\"/>\n</svg>\n{end_of_svg}";
+      const result = parseChordPro(text);
+      expect(result.sections[1].type).toBe("svg");
+      expect(result.sections[1].inProgress).toBe(false);
+      expect(result.sections[1].content).toBe(
+        '<svg width="100" height="100">\n<circle cx="50" cy="50" r="40"/>\n</svg>'
+      );
     });
   });
 

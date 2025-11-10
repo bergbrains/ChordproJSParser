@@ -398,6 +398,14 @@ export function parseChordPro(text) {
         }
       }
     }
+    // Accumulate content for delegated sections (abc, ly, svg, textblock)
+    else if (currentSection.inProgress) {
+      // When inside a delegated section, accumulate non-directive lines into content
+      if (currentSection.content.length > 0) {
+        currentSection.content += "\n";
+      }
+      currentSection.content += line;
+    }
     // Process chord lines
     else if (line.includes("[") && line.includes("]")) {
       const chords = [];
