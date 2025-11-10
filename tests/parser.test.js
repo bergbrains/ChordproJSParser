@@ -310,7 +310,7 @@ describe("ChordPro Parser", () => {
       expect(result.sections[1].type).toBe("ly");
       expect(result.sections[1].inProgress).toBe(false);
       expect(result.sections[1].content).toBe(
-        '\\version "2.18.2"\n\\relative c\' { c4 d e f }'
+        "\\version \"2.18.2\"\n\\relative c' { c4 d e f }"
       );
     });
 
@@ -321,7 +321,7 @@ describe("ChordPro Parser", () => {
       expect(result.sections[1].type).toBe("svg");
       expect(result.sections[1].inProgress).toBe(false);
       expect(result.sections[1].content).toBe(
-        '<svg width="100" height="100">\n<circle cx="50" cy="50" r="40"/>\n</svg>'
+        "<svg width=\"100\" height=\"100\">\n<circle cx=\"50\" cy=\"50\" r=\"40\"/>\n</svg>"
       );
     });
   });

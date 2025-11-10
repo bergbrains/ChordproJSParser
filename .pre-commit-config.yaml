@@ -1,5 +1,5 @@
 exclude: '^dist$'
-fail_fast: true
+fail_fast: false
 # .pre-commit-config.yaml
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
