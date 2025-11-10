@@ -7,29 +7,29 @@ export const transposePlugin = {
   install(chordproJS) {
     // Define chord mapping for transposition
     const chords = [
-      'C',
-      'C#',
-      'D',
-      'D#',
-      'E',
-      'F',
-      'F#',
-      'G',
-      'G#',
-      'A',
-      'A#',
-      'B'
+      "C",
+      "C#",
+      "D",
+      "D#",
+      "E",
+      "F",
+      "F#",
+      "G",
+      "G#",
+      "A",
+      "A#",
+      "B",
     ];
 
     // Define transpose function
     const transposeChord = function (chordString, semitones) {
       // Handle flat notation
       chordString = chordString
-        .replace(/Bb/g, 'A#')
-        .replace(/Db/g, 'C#')
-        .replace(/Eb/g, 'D#')
-        .replace(/Gb/g, 'F#')
-        .replace(/Ab/g, 'G#');
+        .replace(/Bb/g, "A#")
+        .replace(/Db/g, "C#")
+        .replace(/Eb/g, "D#")
+        .replace(/Gb/g, "F#")
+        .replace(/Ab/g, "G#");
 
       // Extract root note and suffix
       const regex = /^([A-G][#]?)(.*)$/;
@@ -63,9 +63,9 @@ export const transposePlugin = {
       if (transposeSteps !== 0) {
         parsed.sections.forEach((section) => {
           section.lines.forEach((line) => {
-            if (line.type === 'chordLine' && line.chords) {
+            if (line.type === "chordLine" && line.chords) {
               line.chords = line.chords.map((chord) =>
-                transposeChord(chord, transposeSteps)
+                transposeChord(chord, transposeSteps),
               );
             }
           });
@@ -74,10 +74,10 @@ export const transposePlugin = {
 
       return parsed;
     };
-  }
+  },
 };
 
 // Register if in browser context
-if (typeof window !== 'undefined' && window.ChordproJS) {
-  window.ChordproJS.registerPlugin('transpose', transposePlugin);
+if (typeof window !== "undefined" && window.ChordproJS) {
+  window.ChordproJS.registerPlugin("transpose", transposePlugin);
 }

@@ -18,14 +18,12 @@ Create a lightweight JavaScript ChordPro parser library called "ChordproJS" with
 ### Core Features
 
 1. **Parser functionality**:
-
    - Parse standard ChordPro directives including `{title}`, `{subtitle}`, `{artist}`, `{key}`, etc.
    - Support for chorus/verse sections with `{start_of_chorus}`, `{end_of_chorus}`, etc.
    - Handle chord notation in square brackets `[C]` placing them above lyrics
    - Parse comments and other metadata
 
 2. **Rendering capabilities**:
-
    - Generate clean HTML with proper semantic structure
    - Support rendering to DOM elements via selector or direct element reference
    - Return HTML string for further processing

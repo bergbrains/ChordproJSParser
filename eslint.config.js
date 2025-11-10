@@ -1,23 +1,23 @@
 // eslint.config.js
-import eslint from '@eslint/js';
-import prettier from 'eslint-config-prettier';
+import eslint from "@eslint/js";
+import prettier from "eslint-config-prettier";
 
 export default [
   eslint.configs.recommended,
   prettier,
   {
     ignores: [
-      'dist/**',
-      'coverage/**',
-      'babel.config.js',
-      'jest.config.js',
-      'tests/mocks/**'
-    ]
+      "dist/**",
+      "coverage/**",
+      "babel.config.js",
+      "jest.config.js",
+      "tests/mocks/**",
+    ],
   },
   {
     languageOptions: {
       ecmaVersion: 2021,
-      sourceType: 'module',
+      sourceType: "module",
       globals: {
         browser: true,
         es2021: true,
@@ -29,22 +29,22 @@ export default [
         beforeEach: true,
         afterEach: true,
         beforeAll: true,
-        afterAll: true
-      }
+        afterAll: true,
+      },
     },
     rules: {
-      'no-unused-vars': 'warn',
-      'no-console': ['warn', { allow: ['error', 'warn'] }],
-      quotes: ['error', 'single'],
-      semi: ['error', 'always'],
-      indent: ['error', 2],
-      'comma-dangle': ['error', 'never']
-    }
+      "no-unused-vars": "warn",
+      "no-console": ["warn", { allow: ["error", "warn"] }],
+      quotes: ["error", "double"],
+      semi: ["error", "always"],
+      indent: ["error", 2],
+      "comma-dangle": "off",
+    },
   },
   {
-    files: ['**/tests/**/*.js'],
+    files: ["**/tests/**/*.js"],
     rules: {
-      'no-console': 'off'
-    }
-  }
+      "no-console": "off",
+    },
+  },
 ];
