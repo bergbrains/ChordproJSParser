@@ -26,11 +26,7 @@
     },
     {
       "groupName": "ESLint and prettier config",
-      "matchPackageNames": [
-        "eslint-config-prettier",
-        "/^@eslint//",
-        "/^eslint$/"
-      ],
+      "matchPackageNames": ["eslint-config-prettier", "/^@eslint//", "/^eslint$/"],
       "matchManagers": ["npm"]
     },
     {
