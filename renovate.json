@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "assigneesFromCodeOwners": true,
-  "baseBranchPatterns": ["main"],
+  "baseBranches": ["main"],
   "commitMessagePrefix": "[renovate] ",
   "dependencyDashboardAutoclose": false,
   "enabledManagers": ["npm", "github-actions", "pre-commit"],
@@ -26,11 +26,7 @@
     },
     {
       "groupName": "ESLint and prettier config",
-      "matchPackageNames": [
-        "eslint-config-prettier",
-        "/^@eslint//",
-        "/^eslint$/"
-      ],
+      "matchPackageNames": ["eslint-config-prettier", "/^@eslint//", "/^eslint$/"],
       "matchManagers": ["npm"]
     },
     {
