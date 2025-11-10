@@ -4,7 +4,7 @@
   "baseBranches": ["main"],
   "commitMessagePrefix": "[renovate] ",
   "dependencyDashboardAutoclose": false,
-  "enabledManagers": ["npm", "npm", "github-actions"],
+  "enabledManagers": ["npm", "github-actions"],
   "extends": [
     ":assignee(@Bergbrains)",
     ":dependencyDashboardApproval",
