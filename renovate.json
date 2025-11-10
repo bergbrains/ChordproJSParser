@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "assigneesFromCodeOwners": true,
-  "baseBranchPatterns": ["main"],
+  "baseBranches": ["main"],
   "commitMessagePrefix": "[renovate] ",
   "dependencyDashboardAutoclose": false,
   "enabledManagers": ["npm", "github-actions", "pre-commit"],
@@ -19,6 +19,17 @@
     "dependencyDashboardApproval": true
   },
   "packageRules": [
+    {
+      "groupName": "Rollup and plugins",
+      "matchPackagePatterns": ["^@rollup/", "^rollup$"],
+      "matchManagers": ["npm"]
+    },
+    {
+      "groupName": "ESLint and prettier config",
+      "matchPackageNames": ["eslint-config-prettier"],
+      "matchPackagePatterns": ["^@eslint/", "^eslint$"],
+      "matchManagers": ["npm"]
+    },
     {
       "groupName": "Development dependencies (npm/yarn)",
       "matchDepTypes": ["devDependencies"],
