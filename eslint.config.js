@@ -1,36 +1,48 @@
 // eslint.config.js
-import eslint from "@eslint/js";
+import js from "@eslint/js";
 import prettier from "eslint-config-prettier";
-import globals from "globals";
 
 export default [
-  eslint.configs.recommended,
+  js.configs.recommended,
+  prettier,
+  {
+    ignores: [
+      "dist/**",
+      "coverage/**",
+      "tests/mocks/**",
+    ],
+  },
   {
     languageOptions: {
       ecmaVersion: 2021,
       sourceType: "module",
       globals: {
-        ...globals.browser,
-        ...globals.node,
-        ...globals.jest,
-        window: "readonly",
-        document: "readonly",
-        describe: "readonly",
-        test: "readonly",
-        expect: "readonly",
-        beforeEach: "readonly",
-        module: "readonly",
-        define: "readonly",
-        self: "readonly",
-        exports: "readonly"
-      }
+        browser: true,
+        es2021: true,
+        node: true,
+        jest: true,
+        describe: true,
+        test: true,
+        expect: true,
+        beforeEach: true,
+        afterEach: true,
+        beforeAll: true,
+        afterAll: true,
+      },
     },
     rules: {
       "no-unused-vars": "warn",
-      "no-console": "warn",
+      "no-console": ["warn", { allow: ["error", "warn"] }],
       quotes: ["error", "double"],
-      semi: ["error", "always"]
-    }
+      semi: ["error", "always"],
+      indent: ["error", 2],
+      "comma-dangle": "off",
+    },
   },
-  prettier // This must be the last configuration in the array
+  {
+    files: ["**/tests/**/*.js"],
+    rules: {
+      "no-console": "off",
+    },
+  },
 ];

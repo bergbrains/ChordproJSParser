@@ -1,290 +1,366 @@
-# ChordPro JS Renderer Documentation
+# ChordproJS - JavaScript ChordPro Parser
 
 ## Overview
 
-The ChordPro JS Renderer is a JavaScript module designed to easily integrate ChordPro-formatted song files into any web
-application. It parses standard ChordPro files and dynamically renders them into HTML, allowing customizable styling
-through CSS.
-
----
+ChordproJS is a lightweight JavaScript library that parses and renders ChordPro-formatted song files into HTML. It
+handles standard ChordPro syntax with zero dependencies, making it easy to integrate into any web application.
 
 ## Features
 
 - Parses standard ChordPro syntax:
-  - Metadata directives: title, subtitle, artist, key, capo, tempo, time, year, album, composer, copyright
-  - Environment directives: chorus, verse, bridge
-  - Comment directives
-  - Font directives: textfont, chordfont, textsize, chordsize, textcolour/textcolor, chordcolour/chordcolor
-  - Chords rendered clearly above corresponding lyrics
-- Flexible rendering into any specified HTML container (`div`)
-- Customizable appearance via standard CSS
+  - Title, subtitle, artist, key, and other directives
+  - Environment tags (chorus, verse, bridge, tab, grid, etc.)
+  - Chords in bracket notation `[C]` rendered above lyrics
+  - Comments and other metadata
+  - Chord diagrams and definitions
+  - Transposition
+  - Text formatting (highlight, italic, etc.)
+  - Page and column breaks
+- Flexible rendering:
+  - To DOM elements via selector or direct element reference
+  - As HTML string for further processing
+- Full support for the ChordPro specification
+- Zero dependencies
+- Available as ES module and UMD builds
 
-## ChordPro Specification
+### Supported ChordPro Directives
 
-ChordPro is a text file format for representing lyrics with chords. The format uses directives (commands that start with {) to define song structure and metadata.
+This library provides comprehensive support for the ChordPro file format specification, including:
 
-For comprehensive information about the ChordPro specification, refer to these resources:
+#### Meta-data directives
 
-- [WorshipTools ChordPro Directives Documentation](https://www.worshiptools.com/en-us/docs/125-cp-directives)
-- [SongBook Pro ChordPro Manual](https://songbook-pro.com/docs/manual/chordpro/)
+- `title` (short: `t`) - Song title
+- `sorttitle` - Title for sorting purposes
+- `subtitle` (short: `st`) - Song subtitle
+- `artist` - Artist name
+- `composer` - Composer name
+- `lyricist` - Lyricist name
+- `copyright` - Copyright information
+- `album` - Album name
+- `year` - Year of publication
+- `key` - Song key
+- `time` - Time signature
+- `tempo` - Song tempo
+- `duration` - Song duration
+- `capo` - Capo position
+- `meta` - Custom metadata
 
----
+#### Formatting directives
 
-## Installation and Usage
+- `comment` (short: `c`) - Plain comment
+- `comment_italic` (short: `ci`) - Italic comment
+- `comment_box` (short: `cb`) - Boxed comment
+- `highlight` - Highlighted text
+- `image` - Embedded image
 
-### 1. Include Module
+#### Environment directives
 
-Copy `chordpro-renderer.js` into your project directory.
+- `start_of_chorus` (short: `soc`) / `end_of_chorus` (short: `eoc`) - Chorus section
+- `chorus` - Reference to a previously defined chorus
+- `start_of_verse` (short: `sov`) / `end_of_verse` (short: `eov`) - Verse section
+- `start_of_bridge` (short: `sob`) / `end_of_bridge` (short: `eob`) - Bridge section
+- `start_of_tab` (short: `sot`) / `end_of_tab` (short: `eot`) - Tab section
+- `start_of_grid` (short: `sog`) / `end_of_grid` (short: `eog`) - Grid section
 
-```html
-<script type="module">
-  import { renderChordPro } from "./chordpro-renderer.js";
-</script>
+#### Delegated environment directives
+
+- `start_of_abc` / `end_of_abc` - ABC notation
+- `start_of_ly` / `end_of_ly` - LilyPond notation
+- `start_of_svg` / `end_of_svg` - SVG content
+- `start_of_textblock` / `end_of_textblock` - Text block
+
+#### Chord diagrams
+
+- `define` - Define a chord diagram
+- `chord` - Display a chord diagram
+
+#### Transposition
+
+- `transpose` - Transpose chords by a number of semitones
+
+#### Fonts, sizes and colours
+
+- Various directives for controlling the appearance of different elements
+
+#### Output related directives
+
+- `new_page` (short: `np`) - Start a new page
+- `new_physical_page` (short: `npp`) - Start a new physical page
+- `column_break` (short: `colb`) - Start a new column
+- `pagetype` - Set the page type
+- `diagrams` - Show chord diagrams
+- `grid` (short: `g`) - Show chord grid
+- `no_grid` (short: `ng`) - Hide chord grid
+- `titles` - Show titles
+- `columns` (short: `col`) - Set number of columns
+
+#### Conditional directives
+
+- Support for directives with selectors (e.g., `{directive-selector: value}`)
+
+#### Custom extensions
+
+- Support for custom directives with the `x_` prefix
+
+## Installation
+
+### npm
+
+```bash
+npm install chordprojs
 ```
 
-### 2. HTML Setup
+## Usage
 
-Include these elements in your HTML:
-
-```html
-<input type="file" id="filePicker" accept=".cho,.chopro,.txt" />
-<input type="text" id="filePath" placeholder="Or enter file URL" />
-<button id="loadBtn">Load ChordPro File</button>
-<div id="chordproTarget"></div>
-```
-
-### 3. JavaScript Integration
-
-Here's how to connect user interaction with the renderer:
+### Direct include
 
 ```html
-<script type="module">
-  import { renderChordPro } from "./chordpro-renderer.js";
-
-  const target = document.getElementById("chordproTarget");
-  const filePicker = document.getElementById("filePicker");
-  const filePath = document.getElementById("filePath");
-  const loadBtn = document.getElementById("loadBtn");
-
-  filePicker.addEventListener("change", function (event) {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-
-    reader.onload = function (e) {
-      renderChordPro(e.target.result, target);
-    };
-
-    reader.readAsText(file);
-  });
-
-  loadBtn.addEventListener("click", function () {
-    fetch(filePath.value)
-      .then((response) => response.text())
-      .then((text) => renderChordPro(text, target))
-      .catch((err) => alert("Failed to load file: " + err));
-  });
-</script>
+<script src="https://cdn.jsdelivr.net/npm/chordprojs/dist/chordprojs.min.js"></script>
 ```
 
----
+```javascript
+// Create an instance
+const chordpro = ChordproJS();
 
-## Styling (CSS)
+// Parse ChordPro text
+const parsed = chordpro.parse(`
+{title: Amazing Grace}
+{subtitle: Traditional}
+{artist: John Newton}
+{key: G}
+{capo: 2}
 
-Include basic CSS for readability:
+{start_of_verse: Verse 1}
+[G]Amazing [D]grace! How [G]sweet the [D]sound
+That [G]saved a [D]wretch like [G]me!
+I [G]once was [D]lost, but [G]now am [D]found,
+Was [G]blind, but [D]now I [G]see.
+{end_of_verse}
+
+{start_of_chorus}
+[C]Praise [G]God, [D]praise [G]God,
+[C]Praise God, [D]praise [G]God!
+{end_of_chorus}
+`);
+
+// Render to element
+chordpro.renderToElement(chordproText, "#song-container");
+
+// Get HTML string
+const html = chordpro.renderToHTML(chordproText);
+
+// Using transposition
+const transposedHtml = chordpro.parse(`
+{title: Amazing Grace}
+{transpose: 2}
+[G]Amazing [D]grace! How [G]sweet the [D]sound
+`);
+```
+
+### Usage notes
+
+_**See [DEVELOPMENT.md](DEVELOPMENT.md)**_
+
+Include the library in your web page, for example:
+
+```
+<script src="https://cdn.jsdelivr.net/npm/chordprojs/dist/chordprojs.min.js"></script>
+```
+
+Add a container element in your HTML:
+
+```
+<div id="song-container"></div>
+```
+
+Use the above JavaScript to parse and render ChordPro text.
+
+# Customizing Colors
+
+You can change the colors of the page, text classes, and chords by overriding the default CSS. For example, in your HTML file or a custom stylesheet, add:
+
+## Customizing Colors and Styling
+
+You can easily customize the appearance of ChordproJS output by adding your own CSS styles. The library uses specific class names that you can target with your own style rules.
+
+### Main CSS Classes
+
+- `.chord-line` - Applied to chord lines (pre element)
+- `.lyric-line` - Applied to lyric lines (pre element)
+- `.lyric-line-only` - Applied to lyric lines when chords are hidden
+- `.comment` - Applied to comment lines
+- `.comment-italic` - Applied to italic comment lines
+- `.comment-box` - Applied to boxed comment lines
+- `.highlight` - Applied to highlighted text
+- `.section` - Applied to all section containers
+- `.section-label` - Applied to section labels
+- `.chorus` - Applied to chorus containers
+- `.verse` - Applied to verse containers
+- `.bridge` - Applied to bridge sections
+- `.tab` - Applied to tab sections
+- `.grid` - Applied to grid sections
+- `.abc` - Applied to ABC notation sections
+- `.ly` - Applied to LilyPond notation sections
+- `.svg` - Applied to SVG content sections
+- `.textblock` - Applied to text block sections
+- `.chorus-ref` - Applied to chorus references
+- `.chord-diagram` - Applied to chord diagrams
+- `.chord-name` - Applied to chord names in diagrams
+- `.chord-definition` - Applied to chord definitions in diagrams
+- `.page-break` - Applied to page breaks
+- `.physical-page-break` - Applied to physical page breaks
+- `.column-break` - Applied to column breaks
+- `.image` - Applied to image containers
+- `.empty-line` - Applied to empty lines
+- `.artist` - Applied to artist information
+- `.key` - Applied to key information
+
+### Example: Basic Color Customization
 
 ```css
-#chordproTarget {
-  border: 1px solid #ccc;
-  padding: 15px;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
-  margin-top: 15px;
+/* Custom chord color */
+pre.chord-line {
+  color: #0066cc; /* Change chord color to blue */
+  font-weight: bold;
 }
 
-/* Chord and lyric lines */
-pre.chord-line {
-  color: #c00;
+/* Custom lyric styling */
+pre.lyric-line {
+  color: #333; /* Darker text for lyrics */
+  font-family: "Arial", sans-serif; /* Change font */
+}
+
+/* Custom styling for chorus sections */
+.chorus {
+  background-color: #f5f5f5; /* Light gray background */
+  border-left: 4px solid #0066cc; /* Blue left border */
+  padding-left: 10px;
+  margin: 10px 0;
+}
+
+/* Custom styling for comments */
+.comment {
+  color: #6c757d; /* Gray color for comments */
+  font-style: italic;
+}
+
+/* Title styling */
+.title {
+  color: #d9534f; /* Red color for title */
+  font-size: 1.8em;
   font-weight: bold;
-  font-family: monospace;
-  margin: 0;
-  line-height: 1.1;
+}
+
+/* Artist styling */
+.artist {
+  color: #5cb85c; /* Green for artist name */
+  font-size: 1.2em;
+}
+```
+
+### Example: Dark Theme
+
+```
+body {
+    background-color: #282c34;
+    color: #abb2bf;
+}
+
+pre.chord-line {
+    color: #c678dd;  /* Purple for chords */
+    font-weight: bold;
 }
 
 pre.lyric-line {
-  margin: 0 0 8px 0;
-  font-family: monospace;
-  line-height: 1.1;
+    color: #abb2bf;  /* Light gray for lyrics */
 }
 
-/* Section types */
-.section {
-  margin-bottom: 15px;
+.chorus {
+    background-color: #2c313a;
+    border-left: 4px solid #61afef;  /* Blue highlight */
+    padding: 8px 12px;
 }
 
-.section.chorus {
-  border-left: 3px solid #c00;
-  padding-left: 10px;
-  background-color: #f9f9f9;
-}
-
-.section.bridge {
-  border-left: 3px solid #00c;
-  padding-left: 10px;
-  background-color: #f0f0ff;
-}
-
-/* Comments */
 .comment {
-  font-style: italic;
-  color: gray;
-  margin: 8px 0;
+    color: #98c379;  /* Green for comments */
 }
 
-/* Metadata */
-h1,
-h2 {
-  margin: 5px 0;
+.title {
+    color: #e06c75;  /* Pink for title */
 }
 
-.artist,
-.key,
-.capo,
-.tempo,
-.time,
-.year,
-.album,
-.composer,
-.copyright {
-  font-size: 0.9em;
-  color: #666;
-  margin: 2px 0;
+.subtitle {
+    color: #d19a66;  /* Orange for subtitle */
+}
+
+#song-container {
+    border: 1px solid #3e4451;
+    padding: 20px;
 }
 ```
 
----
-
-## Font Directives
-
-The ChordPro JS Renderer now supports font directives according to the ChordPro specification. These directives allow you to customize the appearance of text and chords:
-
-```chordpro
-{title: My Song}
-{artist: Artist Name}
-
-{textfont: Arial, sans-serif}
-{textsize: 16px}
-{textcolour: #333333}
-{chordfont: "Courier New", monospace}
-{chordsize: 14px}
-{chordcolour: #cc0000}
-
-{start_of_verse}
-This is a verse with [C]custom font [G]styling
-The text will use Arial, 16px, dark gray
-The chords will use Courier New, 14px, red
-{end_of_verse}
-```
-
-### Supported Font Directives
-
-- **textfont**: Font family for lyrics text
-- **chordfont**: Font family for chord text
-- **textsize**: Font size for lyrics text
-- **chordsize**: Font size for chord text
-- **textcolour** / **textcolor**: Color for lyrics text (supports both UK and US spelling)
-- **chordcolour** / **chordcolor**: Color for chord text (supports both UK and US spelling)
-
-The font directives generate CSS styles that are automatically applied to the rendered HTML output.
-
----
-
-## Module Architecture and Internal Logic
-
-The module (`chordpro-renderer.js`) exports a single JavaScript function:
-
-```javascript
-renderChordPro(text, targetElement);
-```
-
-### How It Works
-
-The parser works line-by-line:
-
-- **Directives**: Detects and processes ChordPro directives:
-  - **Metadata directives**: title, subtitle, artist, key, capo, tempo, time, year, album, composer, copyright
-  - **Environment directives**: start_of_chorus/end_of_chorus, start_of_verse/end_of_verse, start_of_bridge/end_of_bridge (and their aliases)
-  - **Comment directives**: comment (and its alias)
-  - **Font directives**: textfont, chordfont, textsize, chordsize, textcolour/textcolor, chordcolour/chordcolor
-- **Chord & Lyrics**: Extracts chords from bracket notation (`[Chord]`) and places them above their corresponding
-  lyrics, ensuring chords align correctly via monospace fonts.
-
-### Rendering Logic Flow
-
-```plaintext
-ChordPro File Input
-          ↓
- Split into lines
-          ↓
-For each line:
- ├── If directive → handle directive (title, artist, etc.)
- ├── If chords present → separate chords & lyrics, render chord line above lyric line
- └── Render empty lines or spaces appropriately
-          ↓
-Compose final HTML
-          ↓
-Insert into target HTML element
-```
-
-### Diagram
+### Advanced Example: Adding Hover Effects to Chords
 
 ```
-ChordPro Text Input
-       │
-       ▼
- ┌─────────────┐
- │ Line Parser │───┐
- └─────────────┘   │
-       │           ▼
-       ▼    ┌─────────────────┐
- ┌────────┐ │ Directive Logic │
- │ Chords │ └─────────────────┘
- │  and   │          │
- │ Lyrics │          ▼
- └────────┘  ┌───────────────┐
-      │      │  Render HTML  │
-      └─────▶└───────────────┘
-                    │
-                    ▼
-              HTML Output
+pre.chord-line span {
+    display: inline-block;
+    padding: 0 4px;
+    position: relative;
+}
+
+pre.chord-line span:hover {
+    background-color: #ffeecc;
+    border-radius: 3px;
+    cursor: pointer;
+    transform: translateY(-2px);
+    transition: all 0.2s ease;
+}
+
+/* Add a tooltip with chord fingering information */
+pre.chord-line span:hover::after {
+    content: attr(data-chord);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 5px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    white-space: nowrap;
+    z-index: 10;
+}
 ```
 
----
+## Applying Styles
 
-## Extending the Module
+You can add these styles to your page in various ways:
 
-The module already supports many ChordPro directives, including metadata, environment, and comment directives. It can be further extended to support:
+### In a \<style\> tag in your HTML:
 
-- Additional ChordPro directives from the specification
-- Chord diagrams and fingering charts
-- Advanced formatting options
-- Custom section types
+```
+<head>
+    <style>
+        pre.chord-line { color: #0066cc; font-weight: bold; }
+        /* Additional styles... */
+    </style>
+</head>
+```
 
-The module includes a plugin system that allows extending its functionality. See the transpose plugin in `src/plugins/transpose.js` for an example of how to create plugins.
+### In an external CSS file:
 
----
+```
+<head>
+    <link rel="stylesheet" href="my-chordpro-styles.css">
+</head>
+```
 
-## GitHub Integration
+### Dynamically using JavaScript:
 
-Want to render ChordPro files directly on GitHub, similar to how GitHub renders Markdown files? Check out the [GitHub Integration Guide](GITHUB_INTEGRATION.md) for several approaches:
-
-1. **Browser Extension**: Renders ChordPro files directly in GitHub's interface
-2. **GitHub Pages**: Creates a web-based viewer for your ChordPro files
-3. **GitHub Actions**: Automatically generates HTML versions of your ChordPro files
-4. **Custom Web Service**: Provides a standalone service for rendering ChordPro files
-
-A sample browser extension implementation is available in the `examples/github-extension` directory.
-
----
-
-## License
-
-MIT License. Free for commercial and private use.
+```
+// After rendering
+document.querySelectorAll('.chord-line').forEach(el => {
+    el.style.color = '#0066cc';
+});
+```

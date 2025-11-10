@@ -1,2 +1,2 @@
-// tests/mocks/styleMock.js
-export default {};
+// Empty mock file for CSS imports
+module.exports = {};

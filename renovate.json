@@ -4,7 +4,7 @@
   "baseBranches": ["main"],
   "commitMessagePrefix": "[renovate] ",
   "dependencyDashboardAutoclose": false,
-  "enabledManagers": ["npm", "github-actions"],
+  "enabledManagers": ["npm", "github-actions", "pre-commit"],
   "extends": [
     ":assignee(@Bergbrains)",
     ":dependencyDashboardApproval",
@@ -20,12 +20,36 @@
   },
   "packageRules": [
     {
-      "groupName": "Development Dependencies",
+      "groupName": "Rollup and plugins",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@rollup//", "/^rollup$/"]
+    },
+    {
+      "groupName": "ESLint and prettier config",
+      "matchPackageNames": ["eslint-config-prettier", "/^@eslint//", "/^eslint$/"],
+      "matchManagers": ["npm"]
+    },
+    {
+      "groupName": "Development dependencies (npm/yarn)",
       "matchDepTypes": ["devDependencies"],
       "matchManagers": ["npm"],
       "automerge": true,
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
       "ignoreTests": true
+    },
+    {
+      "groupName": "Application dependencies (npm/yarn)",
+      "matchDepTypes": ["dependencies"],
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"]
+    },
+    {
+      "groupName": "GitHub Actions",
+      "matchManagers": ["github-actions"]
+    },
+    {
+      "groupName": "pre-commit hooks",
+      "matchManagers": ["pre-commit"]
     }
   ],
   "prCreation": "immediate",
