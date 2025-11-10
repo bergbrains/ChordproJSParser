@@ -17,50 +17,22 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Install pre-commit
         run: pip install pre-commit
+
+      - name: Clear pre-commit cache
+        run: pre-commit clean
+
+      - name: Install pre-commit hooks and run
+        run: pre-commit run --all-files
 
       - name: Cache pre-commit hooks
         uses: actions/cache@v3
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-
-      - name: Setup OpenTofu
-        uses: opentofu/setup-opentofu@v1
-        with:
-          tofu_version: latest
-          tofu_wrapper: false
-
-      - name: Install terraform-docs
-        run: |
-          curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.16.0/terraform-docs-v0.16.0-$(uname)-amd64.tar.gz
-          tar -xzf terraform-docs.tar.gz
-          chmod +x terraform-docs
-          sudo mv terraform-docs /usr/local/bin/
-          terraform-docs --version
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Cache act tool
-        uses: actions/cache@v3
-        id: cache-act
-        with:
-          path: ~/.cache/act
-          key: act-${{ runner.os }}-${{ hashFiles('scripts/test-github-workflows.sh') }}
-
-      - name: Install act
-        if: steps.cache-act.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p ~/.cache/act
-          curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | bash -s -- -b ~/.cache/act
-          echo "~/.cache/act" >> $GITHUB_PATH
-
-      - name: Add act to PATH
-        run: echo "~/.cache/act" >> $GITHUB_PATH
-
-      - name: Run pre-commit
-        run: pre-commit run -a

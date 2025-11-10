@@ -1,9 +1,9 @@
 // eslint.config.js
-import eslint from "@eslint/js";
+import js from "@eslint/js";
 import prettier from "eslint-config-prettier";
 
 export default [
-  eslint.configs.recommended,
+  js.configs.recommended,
   prettier,
   {
     ignores: [

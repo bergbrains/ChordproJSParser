@@ -27,7 +27,6 @@ repos:
         files: \.[jt]sx?$  # match JavaScript and TypeScript files
         exclude: '.*dist\/.*'
         types: [ file ]
-
         additional_dependencies:
           - eslint
           - '@eslint/js'
@@ -40,3 +39,4 @@ repos:
         language: system
         pass_filenames: false
         types: [ javascript ]
+        verbose: true
