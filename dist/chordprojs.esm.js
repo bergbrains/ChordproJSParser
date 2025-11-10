@@ -12,13 +12,20 @@ function parseChordPro(text, options = {}) {
     subtitle: "",
     artist: "",
     key: "",
+    capo: "",
+    tempo: "",
+    time: "",
+    year: "",
+    album: "",
+    composer: "",
+    copyright: "",
     sections: [],
-    metadata: {},
+    metadata: {}
   };
 
   let currentSection = {
     type: "verse",
-    lines: [],
+    lines: []
   };
 
   song.sections.push(currentSection);
@@ -44,18 +51,39 @@ function parseChordPro(text, options = {}) {
         case "key":
           song.key = value;
           break;
+        case "capo":
+          song.capo = value;
+          break;
+        case "tempo":
+          song.tempo = value;
+          break;
+        case "time":
+          song.time = value;
+          break;
+        case "year":
+          song.year = value;
+          break;
+        case "album":
+          song.album = value;
+          break;
+        case "composer":
+          song.composer = value;
+          break;
+        case "copyright":
+          song.copyright = value;
+          break;
         case "comment":
         case "c":
           currentSection.lines.push({
             type: "comment",
-            content: value,
+            content: value
           });
           break;
         case "start_of_chorus":
         case "soc":
           currentSection = {
             type: "chorus",
-            lines: [],
+            lines: []
           };
           song.sections.push(currentSection);
           break;
@@ -63,7 +91,39 @@ function parseChordPro(text, options = {}) {
         case "eoc":
           currentSection = {
             type: "verse",
-            lines: [],
+            lines: []
+          };
+          song.sections.push(currentSection);
+          break;
+        case "start_of_verse":
+        case "sov":
+          currentSection = {
+            type: "verse",
+            lines: []
+          };
+          song.sections.push(currentSection);
+          break;
+        case "end_of_verse":
+        case "eov":
+          currentSection = {
+            type: "verse",
+            lines: []
+          };
+          song.sections.push(currentSection);
+          break;
+        case "start_of_bridge":
+        case "sob":
+          currentSection = {
+            type: "bridge",
+            lines: []
+          };
+          song.sections.push(currentSection);
+          break;
+        case "end_of_bridge":
+        case "eob":
+          currentSection = {
+            type: "verse",
+            lines: []
           };
           song.sections.push(currentSection);
           break;
@@ -93,20 +153,20 @@ function parseChordPro(text, options = {}) {
         type: "chordLine",
         lyrics: lyrics,
         chords: chords,
-        positions: positions,
+        positions: positions
       });
     }
     // Process empty lines
     else if (line.trim() === "") {
       currentSection.lines.push({
-        type: "empty",
+        type: "empty"
       });
     }
     // Process regular lyrics lines
     else {
       currentSection.lines.push({
         type: "lyricLine",
-        content: line,
+        content: line
       });
     }
   });
@@ -146,7 +206,7 @@ function renderToHTML(parsedData, options = {}) {
     showTitle: true,
     showSubtitle: true,
     showChords: true,
-    showComments: true,
+    showComments: true
   };
 
   const settings = { ...defaults, ...options };
@@ -169,10 +229,40 @@ function renderToHTML(parsedData, options = {}) {
     html += `<div class="key">Key: ${escapeHtml(parsedData.key)}</div>`;
   }
 
+  if (parsedData.capo) {
+    html += `<div class="capo">Capo: ${escapeHtml(parsedData.capo)}</div>`;
+  }
+
+  if (parsedData.tempo) {
+    html += `<div class="tempo">Tempo: ${escapeHtml(parsedData.tempo)}</div>`;
+  }
+
+  if (parsedData.time) {
+    html += `<div class="time">Time: ${escapeHtml(parsedData.time)}</div>`;
+  }
+
+  if (parsedData.year) {
+    html += `<div class="year">Year: ${escapeHtml(parsedData.year)}</div>`;
+  }
+
+  if (parsedData.album) {
+    html += `<div class="album">Album: ${escapeHtml(parsedData.album)}</div>`;
+  }
+
+  if (parsedData.composer) {
+    html += `<div class="composer">Composer: ${escapeHtml(parsedData.composer)}</div>`;
+  }
+
+  if (parsedData.copyright) {
+    html += `<div class="copyright">Copyright: ${escapeHtml(parsedData.copyright)}</div>`;
+  }
+
   // Render sections
   parsedData.sections.forEach((section) => {
     if (section.type === "chorus") {
       html += '<div class="section chorus">';
+    } else if (section.type === "bridge") {
+      html += '<div class="section bridge">';
     } else {
       html += '<div class="section verse">';
     }
@@ -204,9 +294,7 @@ function renderToHTML(parsedData, options = {}) {
             html += `<pre class="chord-line">${escapeHtml(chordLine)}</pre>`;
             html += `<pre class="lyric-line">${escapeHtml(line.lyrics)}</pre>`;
           } else {
-            html += `<div class="lyric-line-only">${escapeHtml(
-              line.lyrics,
-            )}</div>`;
+            html += `<div class="lyric-line-only">${escapeHtml(line.lyrics)}</div>`;
           }
           break;
 
@@ -237,7 +325,7 @@ function escapeHtml(text) {
     "<": "&lt;",
     ">": "&gt;",
     '"': "&quot;",
-    "'": "&#039;",
+    "'": "&#039;"
   };
   return text.replace(/[&<>"']/g, (m) => map[m]);
 }
@@ -258,7 +346,7 @@ class ChordproJS {
       showSubtitle: true,
       showChords: true,
       showComments: true,
-      ...options,
+      ...options
     };
   }
 

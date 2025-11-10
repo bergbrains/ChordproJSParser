@@ -4,12 +4,12 @@ module.exports = {
     browser: true,
     es2021: true,
     node: true,
-    jest: true,
+    jest: true
   },
   extends: ["eslint:recommended", "prettier"],
   parserOptions: {
     ecmaVersion: 2021,
-    sourceType: "module",
+    sourceType: "module"
   },
   rules: {
     "no-unused-vars": "warn",
@@ -21,6 +21,6 @@ module.exports = {
     eqeqeq: ["error", "always"],
     "no-trailing-spaces": "error",
     "object-curly-spacing": ["error", "always"],
-    "arrow-spacing": ["error", { before: true, after: true }],
-  },
+    "arrow-spacing": ["error", { before: true, after: true }]
+  }
 };

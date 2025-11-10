@@ -10,19 +10,19 @@ export default {
       file: "dist/chordprojs.min.js",
       format: "umd",
       name: "ChordproJS",
-      plugins: [terser()],
+      plugins: [terser()]
     },
     {
       file: "dist/chordprojs.esm.js",
-      format: "es",
-    },
+      format: "es"
+    }
   ],
   plugins: [
     resolve(),
     commonjs(),
     postcss({
       extract: "dist/chordprojs.min.css",
-      minimize: true,
-    }),
-  ],
+      minimize: true
+    })
+  ]
 };

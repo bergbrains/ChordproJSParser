@@ -5,20 +5,7 @@
 export const transposePlugin = {
   install(chordproJS, options = {}) {
     // Define chord mapping for transposition
-    const chords = [
-      "C",
-      "C#",
-      "D",
-      "D#",
-      "E",
-      "F",
-      "F#",
-      "G",
-      "G#",
-      "A",
-      "A#",
-      "B",
-    ];
+    const chords = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
     chordproJS.transpose = function (chordString, semitones) {
       // Handle flat notation
@@ -54,9 +41,7 @@ export const transposePlugin = {
         parsed.sections.forEach((section) => {
           section.lines.forEach((line) => {
             if (line.type === "chordLine" && line.chords) {
-              line.chords = line.chords.map((chord) =>
-                this.transpose(chord, transposeSteps),
-              );
+              line.chords = line.chords.map((chord) => this.transpose(chord, transposeSteps));
             }
           });
         });
@@ -64,7 +49,7 @@ export const transposePlugin = {
 
       return parsed;
     };
-  },
+  }
 };
 
 // Register if in browser context

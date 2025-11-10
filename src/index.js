@@ -1,7 +1,6 @@
 // src/index.js
-import { parseChordPro } from "./core/parser";
-import { renderToElement, renderToHTML } from "./core/renderer";
-import "../style.css";
+import { parseChordPro } from "./core/parser.js";
+import { renderToElement, renderToHTML } from "./core/renderer.js";
 
 /**
  * Main ChordproJS class
@@ -17,7 +16,7 @@ class ChordproJS {
       showSubtitle: true,
       showChords: true,
       showComments: true,
-      ...options,
+      ...options
     };
   }
 

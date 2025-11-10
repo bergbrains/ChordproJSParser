@@ -30,11 +30,17 @@ export function renderToHTML(parsedData, options = {}) {
     showTitle: true,
     showSubtitle: true,
     showChords: true,
-    showComments: true,
+    showComments: true
   };
 
   const settings = { ...defaults, ...options };
   let html = "";
+
+  // Generate CSS styles from font configuration
+  const fontStyles = generateFontStyles(parsedData.fonts);
+  if (fontStyles) {
+    html += `<style>${fontStyles}</style>`;
+  }
 
   // Render title and subtitle
   if (settings.showTitle && parsedData.title) {
@@ -53,10 +59,40 @@ export function renderToHTML(parsedData, options = {}) {
     html += `<div class="key">Key: ${escapeHtml(parsedData.key)}</div>`;
   }
 
+  if (parsedData.capo) {
+    html += `<div class="capo">Capo: ${escapeHtml(parsedData.capo)}</div>`;
+  }
+
+  if (parsedData.tempo) {
+    html += `<div class="tempo">Tempo: ${escapeHtml(parsedData.tempo)}</div>`;
+  }
+
+  if (parsedData.time) {
+    html += `<div class="time">Time: ${escapeHtml(parsedData.time)}</div>`;
+  }
+
+  if (parsedData.year) {
+    html += `<div class="year">Year: ${escapeHtml(parsedData.year)}</div>`;
+  }
+
+  if (parsedData.album) {
+    html += `<div class="album">Album: ${escapeHtml(parsedData.album)}</div>`;
+  }
+
+  if (parsedData.composer) {
+    html += `<div class="composer">Composer: ${escapeHtml(parsedData.composer)}</div>`;
+  }
+
+  if (parsedData.copyright) {
+    html += `<div class="copyright">Copyright: ${escapeHtml(parsedData.copyright)}</div>`;
+  }
+
   // Render sections
   parsedData.sections.forEach((section) => {
     if (section.type === "chorus") {
       html += '<div class="section chorus">';
+    } else if (section.type === "bridge") {
+      html += '<div class="section bridge">';
     } else {
       html += '<div class="section verse">';
     }
@@ -88,9 +124,7 @@ export function renderToHTML(parsedData, options = {}) {
             html += `<pre class="chord-line">${escapeHtml(chordLine)}</pre>`;
             html += `<pre class="lyric-line">${escapeHtml(line.lyrics)}</pre>`;
           } else {
-            html += `<div class="lyric-line-only">${escapeHtml(
-              line.lyrics,
-            )}</div>`;
+            html += `<div class="lyric-line-only">${escapeHtml(line.lyrics)}</div>`;
           }
           break;
 
@@ -111,6 +145,51 @@ export function renderToHTML(parsedData, options = {}) {
 }
 
 /**
+ * Generate CSS styles from font configuration
+ * @param {object} fonts - Font configuration object
+ * @returns {string} CSS styles
+ */
+function generateFontStyles(fonts) {
+  if (!fonts) return "";
+
+  let styles = "";
+
+  // Text (lyrics) font styles
+  const textStyles = [];
+  if (fonts.textfont) {
+    textStyles.push(`font-family: ${fonts.textfont}`);
+  }
+  if (fonts.textsize) {
+    textStyles.push(`font-size: ${fonts.textsize}`);
+  }
+  if (fonts.textcolour) {
+    textStyles.push(`color: ${fonts.textcolour}`);
+  }
+
+  if (textStyles.length > 0) {
+    styles += `.lyric-line, .lyric-line-only { ${textStyles.join("; ")}; }\n`;
+  }
+
+  // Chord font styles
+  const chordStyles = [];
+  if (fonts.chordfont) {
+    chordStyles.push(`font-family: ${fonts.chordfont}`);
+  }
+  if (fonts.chordsize) {
+    chordStyles.push(`font-size: ${fonts.chordsize}`);
+  }
+  if (fonts.chordcolour) {
+    chordStyles.push(`color: ${fonts.chordcolour}`);
+  }
+
+  if (chordStyles.length > 0) {
+    styles += `.chord-line { ${chordStyles.join("; ")}; }\n`;
+  }
+
+  return styles;
+}
+
+/**
  * Escape HTML special characters
  * @param {string} text - Text to escape
  * @returns {string} Escaped text
@@ -121,7 +200,7 @@ function escapeHtml(text) {
     "<": "&lt;",
     ">": "&gt;",
     '"': "&quot;",
-    "'": "&#039;",
+    "'": "&#039;"
   };
   return text.replace(/[&<>"']/g, (m) => map[m]);
 }
