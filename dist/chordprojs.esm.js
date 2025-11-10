@@ -2,10 +2,9 @@
 /**
  * Parse ChordPro formatted text into structured data
  * @param {string} text - ChordPro formatted text
- * @param {object} options - Parsing options
  * @returns {object} Structured song data
  */
-function parseChordPro(text, options = {}) {
+function parseChordPro(text) {
   const lines = text.split('\n');
   const song = {
     title: '',
@@ -43,10 +42,10 @@ function parseChordPro(text, options = {}) {
 
       // Handle conditional directives
       let baseDirective = directive;
+
       if (directive.includes('-')) {
         const parts = directive.split('-');
         baseDirective = parts[0];
-        parts[1];
         // For now, we'll process all conditional directives
         // In a full implementation, we would check the condition against config
       }
@@ -105,7 +104,7 @@ function parseChordPro(text, options = {}) {
           }
         }
         break;
-
+      
         // Formatting directives
       case 'comment':
       case 'c':

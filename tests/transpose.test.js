@@ -69,7 +69,7 @@ describe('Transpose Plugin', () => {
       const html = chordpro.renderToHTML(text);
 
       // The rendered HTML should contain the transposed chords
-      expect(html).toContain('<pre class="chord-line">D            A</pre>');
+      expect(html).toContain('<pre class="chord-line">D         A</pre>');
     });
   });
 

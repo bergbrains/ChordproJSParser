@@ -86,7 +86,7 @@ describe('ChordproJS', () => {
     test('should render chord lines', () => {
       const text = '[C]This is a [G]chord line';
       const html = chordpro.renderToHTML(text);
-      expect(html).toContain('<pre class="chord-line">C            G</pre>');
+      expect(html).toContain('<pre class="chord-line">C         G</pre>');
       expect(html).toContain(
         '<pre class="lyric-line">This is a chord line</pre>'
       );

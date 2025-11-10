@@ -43,7 +43,7 @@ describe('ChordPro Renderer', () => {
     test('should render chord lines', () => {
       const parsed = parseChordPro('[C]This is a [G]chord line');
       const html = renderToHTML(parsed);
-      expect(html).toContain('<pre class="chord-line">C            G</pre>');
+      expect(html).toContain('<pre class="chord-line">C         G</pre>');
       expect(html).toContain(
         '<pre class="lyric-line">This is a chord line</pre>'
       );
@@ -372,7 +372,7 @@ describe('ChordPro Renderer', () => {
         }
       };
       const html = renderToHTML(parsed, options);
-      expect(html).toContain('<pre class="chord-line">D            A</pre>');
+      expect(html).toContain('<pre class="chord-line">D         A</pre>');
     });
   });
 });
