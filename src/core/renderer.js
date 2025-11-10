@@ -54,7 +54,8 @@ export function renderToHTML(parsedData, options = {}) {
     html += `<div class="key">Key: ${escapeHtml(parsedData.key)}</div>`;
   }
 
-  // Apply transposition if needed
+  // Apply transposition if needed - work on a cloned copy to avoid mutating parsedData
+  let sections = parsedData.sections;
   if (
     parsedData.metadata &&
     parsedData.metadata.transpose &&
@@ -62,20 +63,26 @@ export function renderToHTML(parsedData, options = {}) {
   ) {
     const transposeValue = parseInt(parsedData.metadata.transpose, 10);
     if (!isNaN(transposeValue)) {
-      parsedData.sections.forEach((section) => {
-        section.lines.forEach((line) => {
+      // Deep clone sections to avoid mutating the original
+      sections = parsedData.sections.map((section) => ({
+        ...section,
+        lines: section.lines.map((line) => {
           if (line.type === 'chordLine' && line.chords) {
-            line.chords = line.chords.map((chord) =>
-              settings.transposeChords(chord, transposeValue)
-            );
+            return {
+              ...line,
+              chords: line.chords.map((chord) =>
+                settings.transposeChords(chord, transposeValue)
+              )
+            };
           }
-        });
-      });
+          return line;
+        })
+      }));
     }
   }
 
   // Render sections
-  parsedData.sections.forEach((section) => {
+  sections.forEach((section) => {
     // Handle section type
     switch (section.type) {
     case 'chorus':

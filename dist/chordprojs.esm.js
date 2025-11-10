@@ -2,10 +2,9 @@
 /**
  * Parse ChordPro formatted text into structured data
  * @param {string} text - ChordPro formatted text
- * @param {object} options - Parsing options
  * @returns {object} Structured song data
  */
-function parseChordPro(text, options = {}) {
+function parseChordPro(text) {
   const lines = text.split('\n');
   const song = {
     title: '',
@@ -43,10 +42,10 @@ function parseChordPro(text, options = {}) {
 
       // Handle conditional directives
       let baseDirective = directive;
+
       if (directive.includes('-')) {
         const parts = directive.split('-');
         baseDirective = parts[0];
-        parts[1];
         // For now, we'll process all conditional directives
         // In a full implementation, we would check the condition against config
       }
@@ -105,7 +104,7 @@ function parseChordPro(text, options = {}) {
           }
         }
         break;
-
+      
         // Formatting directives
       case 'comment':
       case 'c':
@@ -493,7 +492,8 @@ function renderToHTML(parsedData, options = {}) {
     html += `<div class="key">Key: ${escapeHtml(parsedData.key)}</div>`;
   }
 
-  // Apply transposition if needed
+  // Apply transposition if needed - work on a cloned copy to avoid mutating parsedData
+  let sections = parsedData.sections;
   if (
     parsedData.metadata &&
     parsedData.metadata.transpose &&
@@ -501,20 +501,26 @@ function renderToHTML(parsedData, options = {}) {
   ) {
     const transposeValue = parseInt(parsedData.metadata.transpose, 10);
     if (!isNaN(transposeValue)) {
-      parsedData.sections.forEach((section) => {
-        section.lines.forEach((line) => {
+      // Deep clone sections to avoid mutating the original
+      sections = parsedData.sections.map((section) => ({
+        ...section,
+        lines: section.lines.map((line) => {
           if (line.type === 'chordLine' && line.chords) {
-            line.chords = line.chords.map((chord) =>
-              settings.transposeChords(chord, transposeValue)
-            );
+            return {
+              ...line,
+              chords: line.chords.map((chord) =>
+                settings.transposeChords(chord, transposeValue)
+              )
+            };
           }
-        });
-      });
+          return line;
+        })
+      }));
     }
   }
 
   // Render sections
-  parsedData.sections.forEach((section) => {
+  sections.forEach((section) => {
     // Handle section type
     switch (section.type) {
     case 'chorus':
