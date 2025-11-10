@@ -1,11 +1,26 @@
 // src/core/renderer.js
 /* global document */
 /**
- * Render parsed ChordPro data to an HTML element
- * @param {object} parsedData - Data returned from parseChordPro
- * @param {HTMLElement|string} element - Target DOM element or selector
- * @param {object} options - Rendering options
- * @returns {HTMLElement} The rendered element
+ * Render parsed ChordPro data to an HTML element in the DOM
+ * 
+ * This function takes structured song data from the parser and injects it
+ * into a DOM element. It's the primary method for displaying ChordPro content
+ * in web applications.
+ * 
+ * @param {object} parsedData - Data returned from parseChordPro function
+ * @param {HTMLElement|string} element - Target DOM element or CSS selector string
+ * @param {object} [options={}] - Rendering options to control output appearance
+ * @param {boolean} [options.showTitle=true] - Whether to display song title
+ * @param {boolean} [options.showSubtitle=true] - Whether to display subtitle
+ * @param {boolean} [options.showChords=true] - Whether to display chords above lyrics
+ * @param {boolean} [options.showComments=true] - Whether to display comment lines
+ * @param {function} [options.transposeChords] - Optional function to transpose chords
+ * @returns {HTMLElement} The rendered element containing the song HTML
+ * @throws {Error} If the target element cannot be found
+ * 
+ * @example
+ * const parsed = parseChordPro(chordproText);
+ * renderToElement(parsed, '#song-container', { showChords: true });
  */
 export function renderToElement(parsedData, element, options = {}) {
   if (typeof element === "string") {
@@ -21,10 +36,25 @@ export function renderToElement(parsedData, element, options = {}) {
 }
 
 /**
- * Render parsed ChordPro data to HTML string
- * @param {object} parsedData - Data returned from parseChordPro
- * @param {object} options - Rendering options
- * @returns {string} HTML representation
+ * Render parsed ChordPro data to an HTML string
+ * 
+ * This function converts structured song data into HTML markup. Unlike renderToElement,
+ * this returns a string rather than modifying the DOM, making it useful for server-side
+ * rendering, email templates, or programmatic HTML generation.
+ * 
+ * @param {object} parsedData - Data returned from parseChordPro function
+ * @param {object} [options={}] - Rendering options to control output appearance
+ * @param {boolean} [options.showTitle=true] - Whether to include song title in output
+ * @param {boolean} [options.showSubtitle=true] - Whether to include subtitle in output
+ * @param {boolean} [options.showChords=true] - Whether to include chords above lyrics
+ * @param {boolean} [options.showComments=true] - Whether to include comment lines
+ * @param {function} [options.transposeChords] - Optional function to transpose chords
+ * @returns {string} HTML representation of the song
+ * 
+ * @example
+ * const parsed = parseChordPro('{title: My Song}\n[C]Hello world');
+ * const html = renderToHTML(parsed);
+ * // Returns: '<h1>My Song</h1><div class="section verse">...'
  */
 export function renderToHTML(parsedData, options = {}) {
   const defaults = {
@@ -37,7 +67,8 @@ export function renderToHTML(parsedData, options = {}) {
   const settings = { ...defaults, ...options };
   let html = "";
 
-  // Render title and subtitle
+  // Render title and subtitle metadata
+  // These are rendered as standard HTML heading elements for semantic markup
   if (settings.showTitle && parsedData.title) {
     html += `<h1>${escapeHtml(parsedData.title)}</h1>`;
   }
@@ -55,6 +86,8 @@ export function renderToHTML(parsedData, options = {}) {
   }
 
   // Apply transposition if needed
+  // The {transpose: N} directive modifies all chords before rendering
+  // This is processed here rather than in the parser to keep parsing pure
   if (
     parsedData.metadata &&
     parsedData.metadata.transpose &&
@@ -62,6 +95,7 @@ export function renderToHTML(parsedData, options = {}) {
   ) {
     const transposeValue = parseInt(parsedData.metadata.transpose, 10);
     if (!isNaN(transposeValue)) {
+      // Mutate the parsed data to transpose chords in place
       parsedData.sections.forEach((section) => {
         section.lines.forEach((line) => {
           if (line.type === "chordLine" && line.chords) {
@@ -167,12 +201,15 @@ export function renderToHTML(parsedData, options = {}) {
       case "chordLine":
         if (settings.showChords) {
           // Create chord line
+          // Chords must be positioned above their corresponding lyrics based on stored positions
           let chordLine = "";
           /* eslint-disable-next-line no-unused-vars */
           const lyrics = line.lyrics;
           const chords = line.chords;
           const positions = line.positions;
 
+          // Special case handling for specific test requirements
+          // TODO: This should be refactored to use a more general spacing algorithm
           // For the test case with "[C]This is a [G]chord line"
           // We need exactly 12 spaces between C and G
           if (
@@ -181,7 +218,8 @@ export function renderToHTML(parsedData, options = {}) {
           ) {
             chordLine = chords[0] + " ".repeat(12) + chords[1];
           } else {
-            // Insert spaces before each chord position
+            // General algorithm: insert spaces based on chord positions
+            // This aligns each chord above its position in the lyrics
             let lastPos = 0;
             for (let i = 0; i < chords.length; i++) {
               const spaces = positions[i] - lastPos;
@@ -193,6 +231,7 @@ export function renderToHTML(parsedData, options = {}) {
           html += `<pre class="chord-line">${escapeHtml(chordLine)}</pre>`;
           html += `<pre class="lyric-line">${escapeHtml(line.lyrics)}</pre>`;
         } else {
+          // When chords are hidden, render lyrics only
           html += `<div class="lyric-line-only">${escapeHtml(
             line.lyrics,
           )}</div>`;
@@ -253,9 +292,18 @@ export function renderToHTML(parsedData, options = {}) {
 }
 
 /**
- * Escape HTML special characters
+ * Escape HTML special characters to prevent XSS attacks
+ * 
+ * This is a critical security function that sanitizes user input before
+ * rendering it as HTML. All text content from ChordPro files must be
+ * escaped to prevent malicious code injection.
+ * 
  * @param {string} text - Text to escape
- * @returns {string} Escaped text
+ * @returns {string} Escaped text safe for HTML rendering
+ * 
+ * @example
+ * escapeHtml('<script>alert("xss")</script>');
+ * // Returns: '&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;'
  */
 function escapeHtml(text) {
   const map = {
