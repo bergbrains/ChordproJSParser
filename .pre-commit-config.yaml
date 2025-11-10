@@ -1,5 +1,5 @@
 exclude: '^dist$'
-fail_fast: true
+fail_fast: false
 # .pre-commit-config.yaml
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -23,7 +23,7 @@ repos:
     rev: v9.39.1
     hooks:
       - id: eslint
-        args: [--fix]
+        args: [ --no-warn-ignored, --fix ]
         files: \.[jt]sx?$  # match JavaScript and TypeScript files
         exclude: '.*dist\/.*'
         types: [ file ]
