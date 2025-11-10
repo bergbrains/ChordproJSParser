@@ -362,15 +362,20 @@ export function parseChordPro(text) {
         song.metadata.pagetype = value;
         break;
       case "diagrams":
-        song.metadata.diagrams =
-            value.toLowerCase() === "true" || value === "";
+        // Only set diagrams when an explicit value is provided (e.g. 'true' or 'false').
+        if (value !== "") {
+          song.metadata.diagrams = value.toLowerCase() === "true";
+        }
         break;
       case "grid":
       case "g":
-        song.metadata.grid = value.toLowerCase() === "true" || value === "";
+        // Only set grid when an explicit value is provided; empty values are ignored.
+        if (value !== "") {
+          song.metadata.grid = value.toLowerCase() === "true";
+        }
         break;
       case "no_grid":
-      case "ng":
+        // Explicit directive to disable grid
         song.metadata.grid = false;
         break;
       case "titles":

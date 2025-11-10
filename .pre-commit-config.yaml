@@ -31,11 +31,11 @@ repos:
           - eslint
           - '@eslint/js'
 
-#  - repo: local
-#    hooks:
-#      - id: jest-tests
-#        name: Run Jest tests
-#        entry: npm test
-#        language: system
-#        pass_filenames: false
-#        types: [ javascript ]
+  - repo: local
+    hooks:
+      - id: jest-tests
+        name: Run Jest tests
+        entry: npm test
+        language: system
+        pass_filenames: false
+        types: [ javascript ]
