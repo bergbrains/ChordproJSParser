@@ -1,11 +1,35 @@
 // src/core/parser.js
 /**
  * Parse ChordPro formatted text into structured data
- * @param {string} text - ChordPro formatted text
- * @returns {object} Structured song data
+ * 
+ * This is the core parsing engine that converts ChordPro text format into a structured
+ * JavaScript object. It handles all ChordPro directives including metadata, formatting,
+ * environment sections, chord diagrams, transposition, and more.
+ * 
+ * @param {string} text - ChordPro formatted text containing song data and directives
+ * @param {object} [options] - Optional parsing options (currently unused but reserved for future extensions)
+ * @returns {object} Structured song data with the following properties:
+ *   - title {string} - Song title
+ *   - subtitle {string} - Song subtitle
+ *   - artist {string} - Artist name
+ *   - key {string} - Musical key
+ *   - sections {Array<object>} - Array of song sections (verse, chorus, bridge, etc.)
+ *   - metadata {object} - Additional metadata like composer, copyright, capo, etc.
+ * 
+ * @example
+ * const parsed = parseChordPro(`
+ *   {title: Amazing Grace}
+ *   {artist: John Newton}
+ *   [G]Amazing [D]grace
+ * `);
+ * console.log(parsed.title); // "Amazing Grace"
+ * console.log(parsed.sections[0].lines[0].chords); // ["G", "D"]
  */
 export function parseChordPro(text) {
   const lines = text.split("\n");
+  
+  // Initialize the song object with core metadata fields
+  // These fields are separated from metadata object for convenience
   const song = {
     title: "",
     subtitle: "",
@@ -15,6 +39,8 @@ export function parseChordPro(text) {
     metadata: {},
   };
 
+  // Start with an initial verse section as the default container
+  // This allows songs without explicit section directives to still be parsed correctly
   let currentSection = {
     type: "verse",
     lines: [],
@@ -23,13 +49,15 @@ export function parseChordPro(text) {
   song.sections.push(currentSection);
 
   lines.forEach((line) => {
-    // Process directives (metadata)
+    // Process directives (metadata and control commands)
+    // Directives are enclosed in curly braces: {directive} or {directive: value}
     if (line.trim().match(/^\{([^:}]+)(?::([^}]*))?\}$/)) {
       const matches = line.trim().match(/^\{([^:}]+)(?::([^}]*))?\}$/);
       const directive = matches[1].trim().toLowerCase();
       const value = matches[2] ? matches[2].trim() : "";
 
-      // Parse directive attributes if present
+      // Parse directive attributes if present (HTML-like format)
+      // e.g., {start_of_chorus: label="Chorus 1"} would extract label="Chorus 1"
       let attributes = {};
       if (value && value.includes("=")) {
         // Extract attributes in HTML-like format
@@ -40,7 +68,9 @@ export function parseChordPro(text) {
         }
       }
 
-      // Handle conditional directives
+      // Handle conditional directives (e.g., {title-screen: "Mobile Title"})
+      // These allow different values based on output target
+      // For simplicity, we process all conditional directives by using the base directive name
       let baseDirective = directive;
 
       if (directive.includes("-")) {
@@ -147,6 +177,8 @@ export function parseChordPro(text) {
         // Environment directives
       case "start_of_chorus":
       case "soc":
+        // Start a new chorus section
+        // Labels allow multiple choruses to be distinguished (e.g., "Chorus 1", "Chorus 2")
         currentSection = {
           type: "chorus",
           lines: [],
@@ -156,6 +188,7 @@ export function parseChordPro(text) {
         break;
       case "end_of_chorus":
       case "eoc":
+        // After chorus ends, return to default verse section for subsequent content
         currentSection = {
           type: "verse",
           lines: [],
@@ -163,7 +196,7 @@ export function parseChordPro(text) {
         song.sections.push(currentSection);
         break;
       case "chorus":
-        // Reference to a previously defined chorus
+        // Reference to a previously defined chorus (used to repeat without duplicating content)
         currentSection.lines.push({
           type: "chorusRef",
           label: value,
@@ -239,6 +272,8 @@ export function parseChordPro(text) {
         break;
 
         // Delegated environment directives
+        // These sections contain content in other notation formats (ABC, LilyPond, SVG, etc.)
+        // The content is accumulated verbatim until the matching end directive
       case "start_of_abc":
       case "start_of_ly":
       case "start_of_svg":
@@ -247,7 +282,7 @@ export function parseChordPro(text) {
           type: baseDirective.replace("start_of_", ""),
           lines: [],
           content: "",
-          inProgress: true,
+          inProgress: true, // Flag to indicate we're accumulating raw content
         };
         song.sections.push(currentSection);
         break;
@@ -258,6 +293,7 @@ export function parseChordPro(text) {
         if (currentSection.inProgress) {
           currentSection.inProgress = false;
         }
+        // Return to default verse section after delegated content
         currentSection = {
           type: "verse",
           lines: [],
@@ -267,6 +303,8 @@ export function parseChordPro(text) {
 
         // Chord diagrams
       case "define": {
+        // Define a chord diagram/fingering
+        // Format: {define: ChordName base-fret N frets x x 0 2 3 2 fingers - - - 1 2 3}
         const chordMatch = value.match(/^(\S+)\s+(.*)$/);
         if (chordMatch) {
           const chordName = chordMatch[1];
@@ -279,6 +317,7 @@ export function parseChordPro(text) {
         break;
       }
       case "chord":
+        // Display a chord diagram at this position in the song
         currentSection.lines.push({
           type: "chord",
           name: value,
@@ -287,6 +326,8 @@ export function parseChordPro(text) {
 
         // Transposition
       case "transpose":
+        // Transpose all chords by the specified number of semitones
+        // Positive values transpose up, negative values transpose down
         song.metadata.transpose = parseInt(value, 10) || 0;
         break;
 
@@ -399,6 +440,8 @@ export function parseChordPro(text) {
       }
     }
     // Accumulate content for delegated sections (abc, ly, svg, textblock)
+    // When inside a delegated section, collect non-directive lines verbatim
+    // This preserves the formatting of specialized notation systems
     else if (currentSection.inProgress) {
       // When inside a delegated section, accumulate non-directive lines into content
       if (currentSection.content.length > 0) {
@@ -406,22 +449,24 @@ export function parseChordPro(text) {
       }
       currentSection.content += line;
     }
-    // Process chord lines
+    // Process chord lines (lines containing chords in square brackets)
+    // Example: "[G]Amazing [D]grace" contains chords G and D
     else if (line.includes("[") && line.includes("]")) {
       const chords = [];
       const positions = [];
 
-      // Extract chords and their positions
+      // Extract chords and their positions relative to lyrics
+      // We need to track positions to align chords above the correct syllables
       let lyrics = line;
       const chordRegex = /\[([^\]]+)\]/g;
       let match;
-      let offset = 0;
+      let offset = 0; // Track how many characters we've removed (chord brackets)
 
       while ((match = chordRegex.exec(line)) !== null) {
-        chords.push(match[1]);
-        positions.push(match.index - offset);
-        offset += match[0].length;
-        lyrics = lyrics.replace(match[0], "");
+        chords.push(match[1]); // The chord name (e.g., "G", "Dm7")
+        positions.push(match.index - offset); // Position in the lyrics (accounting for removed brackets)
+        offset += match[0].length; // Account for the removed "[chord]" characters
+        lyrics = lyrics.replace(match[0], ""); // Remove chord from lyrics
       }
 
       currentSection.lines.push({

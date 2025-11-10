@@ -1,5 +1,27 @@
 # ChordproJS - JavaScript ChordPro Parser
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+  - [Supported ChordPro Directives](#supported-chordpro-directives)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Direct Include](#direct-include)
+  - [Usage Notes](#usage-notes)
+- [Customizing Colors and Styling](#customizing-colors-and-styling)
+  - [Main CSS Classes](#main-css-classes)
+  - [Example: Basic Color Customization](#example-basic-color-customization)
+  - [Example: Dark Theme](#example-dark-theme)
+  - [Advanced Example: Adding Hover Effects to Chords](#advanced-example-adding-hover-effects-to-chords)
+  - [Applying Styles](#applying-styles)
+- [Contributing](#contributing)
+- [Documentation](#documentation)
+- [Browser Support](#browser-support)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
+- [Support](#support)
+
 ## Overview
 
 ChordproJS is a lightweight JavaScript library that parses and renders ChordPro-formatted song files into HTML. It
@@ -364,3 +386,69 @@ document.querySelectorAll('.chord-line').forEach(el => {
     el.style.color = '#0066cc';
 });
 ```
+
+## Contributing
+
+We welcome contributions! Please see our [DEVELOPMENT.md](DEVELOPMENT.md) guide for detailed information on:
+
+- Setting up your development environment
+- Project architecture and design principles
+- Coding standards and style guide
+- Testing requirements
+- Pull request process
+
+### Quick Start for Contributors
+
+1. Fork the repository
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/ChordproJSParser.git`
+3. Install dependencies: `npm install`
+4. Create a feature branch: `git checkout -b feature/your-feature`
+5. Make your changes and add tests
+6. Run tests: `npm test`
+7. Run linter: `npm run lint`
+8. Commit your changes with a descriptive message
+9. Push to your fork and submit a pull request
+
+### Reporting Issues
+
+Found a bug or have a feature request? Please check [existing issues](https://github.com/bergbrains/ChordproJSParser/issues) first, then create a new issue with:
+
+- Clear description of the problem or feature
+- Steps to reproduce (for bugs)
+- Expected vs actual behavior
+- ChordPro example that demonstrates the issue
+- Your environment (browser, Node.js version, etc.)
+
+## Documentation
+
+- [API Documentation](API-index.md) - Complete API reference
+- [Development Guide](DEVELOPMENT.md) - Architecture and contribution guidelines
+- [Examples](examples/) - Working examples and demos
+- [Changelog](CHANGELOG.md) - Version history and changes
+
+## Browser Support
+
+ChordproJS works in all modern browsers:
+
+- Chrome/Edge 90+
+- Firefox 88+
+- Safari 14+
+- Opera 76+
+
+For older browser support, transpile with Babel.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- ChordPro format specification: [https://www.chordpro.org/](https://www.chordpro.org/)
+- Contributors and community members who help improve this library
+
+## Support
+
+- 📖 [Documentation](API-index.md)
+- 💬 [Discussions](https://github.com/bergbrains/ChordproJSParser/discussions)
+- 🐛 [Issue Tracker](https://github.com/bergbrains/ChordproJSParser/issues)
+- 📧 Contact: [Create an issue](https://github.com/bergbrains/ChordproJSParser/issues/new)
