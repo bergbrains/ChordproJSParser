@@ -32,6 +32,7 @@
     "@eslint/js": "^8.57.1",
     "@rollup/plugin-commonjs": "^22.0.0",
     "@rollup/plugin-node-resolve": "^13.3.0",
+    "@rollup/plugin-terser": "^0.1.0",
     "babel-jest": "^30.0.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
@@ -39,7 +40,9 @@
     "jest-environment-jsdom": "^30.0.0",
     "rollup": "^2.75.7",
     "rollup-plugin-postcss": "^4.0.2",
-    "@rollup/plugin-terser": "0.1.0",
     "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "show": "^0.0.1"
   }
 }
