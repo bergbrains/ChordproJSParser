@@ -9,8 +9,6 @@ export default [
     ignores: [
       "dist/**",
       "coverage/**",
-      "babel.config.js",
-      "jest.config.js",
       "tests/mocks/**",
     ],
   },
