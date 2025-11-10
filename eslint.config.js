@@ -1,22 +1,48 @@
-// .eslintrc.js
-module.exports = {
-  env: {
-    browser: true,
-    es2021: true,
-    node: true,
-    jest: true,
+// eslint.config.js
+import js from "@eslint/js";
+import prettier from "eslint-config-prettier";
+
+export default [
+  js.configs.recommended,
+  prettier,
+  {
+    ignores: [
+      "dist/**",
+      "coverage/**",
+      "tests/mocks/**",
+    ],
   },
-  extends: ["eslint:recommended", "prettier"],
-  parserOptions: {
-    ecmaVersion: 2021,
-    sourceType: "module",
+  {
+    languageOptions: {
+      ecmaVersion: 2021,
+      sourceType: "module",
+      globals: {
+        browser: true,
+        es2021: true,
+        node: true,
+        jest: true,
+        describe: true,
+        test: true,
+        expect: true,
+        beforeEach: true,
+        afterEach: true,
+        beforeAll: true,
+        afterAll: true,
+      },
+    },
+    rules: {
+      "no-unused-vars": "warn",
+      "no-console": ["warn", { allow: ["error", "warn"] }],
+      quotes: ["error", "double"],
+      semi: ["error", "always"],
+      indent: ["error", 2],
+      "comma-dangle": "off",
+    },
   },
-  rules: {
-    "no-unused-vars": "warn",
-    "no-console": "warn",
-    quotes: ["error", "single"],
-    semi: ["error", "always"],
-    indent: ["error", 2],
-    "comma-dangle": ["error", "never"],
+  {
+    files: ["**/tests/**/*.js"],
+    rules: {
+      "no-console": "off",
+    },
   },
-};
+];

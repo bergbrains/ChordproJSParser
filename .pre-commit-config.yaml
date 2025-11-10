@@ -1,33 +1,35 @@
 exclude: '^dist$'
+fail_fast: true
 # .pre-commit-config.yaml
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
-      - id: check-added-large-files
-      - id: check-docstring-first
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+        exclude: '.*dist\/.*|package-lock.json'
+      - id: check-yaml
       - id: check-json
       - id: check-merge-conflict
-      - id: check-shebang-scripts-are-executable
-      - id: check-yaml
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-
-  - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v9.31.0
-    hooks:
-      - id: eslint
-        files: \.[jt]sx?$  # match JavaScript and TypeScript files
-        types: [ file ]
-        additional_dependencies:
-          - eslint
-          - '@eslint/js'
+      - id: check-added-large-files
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
         types_or: [ javascript, jsx, ts, tsx, json, css, markdown ]
+
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v9.39.1
+    hooks:
+      - id: eslint
+        args: [--fix]
+        files: \.[jt]sx?$  # match JavaScript and TypeScript files
+        exclude: '.*dist\/.*'
+        types: [ file ]
+        additional_dependencies:
+          - eslint
+          - '@eslint/js'
 
   - repo: local
     hooks:
@@ -37,11 +39,4 @@ repos:
         language: system
         pass_filenames: false
         types: [ javascript ]
-  - repo: local
-    hooks:
-      - id: test-github-workflows
-        name: Test GitHub Workflows with act
-        entry: ./scripts/test-github-workflows.sh
-        language: script
-        files: .pre-commit-config.yaml$
         verbose: true

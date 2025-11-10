@@ -1,52 +1,104 @@
-# AI Prompt to Generate the Complete ChordPro Renderer Project
+# AI Prompt to Generate the ChordproJS Parser Library
 
-Use this prompt with an AI assistant (like ChatGPT) to regenerate the entire ChordPro rendering solution from scratch:
+Use this prompt with an AI assistant to recreate the ChordproJS parser library:
 
 ---
 
 **Prompt:**
 
-Create a fully functional JavaScript-based ChordPro renderer web application with the following specifications:
+Create a lightweight JavaScript ChordPro parser library called "ChordproJS" with the following specifications:
 
 ### Project Overview
 
-- Develop a lightweight, standalone JavaScript module to render ChordPro-formatted files dynamically into HTML.
-- Ensure chords are aligned clearly above their corresponding lyrics using a monospace font.
+- Develop a zero-dependency JavaScript library that parses and renders ChordPro-formatted text to HTML
+- Create both ES module and UMD builds for maximum compatibility
+- Design with modularity, allowing easy extension for advanced features
+- Focus on clean, maintainable code with comprehensive documentation
 
 ### Core Features
 
-- Parse and render essential ChordPro directives, including:
-  - `{title}`, `{artist}`, `{comment}`, `{start_of_chorus}`, `{end_of_chorus}`, and similar common directives.
-- Provide two methods for loading ChordPro files:
-  - File picker to select local `.cho`, `.chopro`, or `.txt` files.
-  - Text input to paste a URL and load remote ChordPro files via a button.
-- Render output into a specified `div` or target HTML element.
+1. **Parser functionality**:
+   - Parse standard ChordPro directives including `{title}`, `{subtitle}`, `{artist}`, `{key}`, etc.
+   - Support for chorus/verse sections with `{start_of_chorus}`, `{end_of_chorus}`, etc.
+   - Handle chord notation in square brackets `[C]` placing them above lyrics
+   - Parse comments and other metadata
 
-### Files to Create
+2. **Rendering capabilities**:
+   - Generate clean HTML with proper semantic structure
+   - Support rendering to DOM elements via selector or direct element reference
+   - Return HTML string for further processing
+   - Use monospace font for chord/lyric alignment
 
-- `index.html`: Contains the file picker, URL input, load button, and target `div`.
-- `chordpro-renderer.js`: JavaScript ES module implementing parsing and rendering logic.
-- `style.css`: Default CSS to provide clean, readable formatting of rendered output.
-- Comprehensive user documentation (`README.md`) clearly outlining usage and integration steps.
-- Advanced customization documentation (`CUSTOMIZATION.md`) with details on tweaking parameters such as chord spacing,
-  colors, and typography.
+3. **API design**:
+   - Factory function pattern returning an object with methods
+   - Simple API with core methods: `parse()`, `renderToElement()`, `renderToString()`
+   - Support for configuration options
 
-### Customization and Extensibility
+### Project Structure
 
-- Ensure the solution allows easy CSS customization (chord colors, spacing, fonts).
-- Provide clear guidelines for extending functionality (e.g., chord diagrams, additional ChordPro directives,
-  transposition).
-- Include diagrams or structured explanations illustrating internal logic and rendering flow.
+```text
+chordprojs/
+├── dist/
+│ ├── chordprojs.js
+│ └── chordprojs.min.js
+├── examples/
+│ └── basic.html
+├── src/
+│ ├── index.js
+│ ├── parser.js
+│ └── renderer.js
+├── tests/
+│ └── chordprojs.test.js
+├── package.json
+├── README.md
+├── DEVELOPMENT.md
+└── LICENSE
+```
 
-### Technical Requirements
+### Build Setup
 
-- Use plain JavaScript ES modules without external dependencies.
-- Maintain clear, maintainable code with helpful comments and clean structure.
-- Ensure compatibility with modern web browsers and easy integration into existing web projects.
+- Use Rollup for bundling both ES module and UMD formats
+- Include Babel for transpilation
+- Set up ESLint and Prettier for code consistency
+- Add Jest for unit testing
+- Configure npm scripts for development, testing and building
 
-### Output
+### Example API Usage
 
-- Provide complete and immediately usable HTML, JavaScript, CSS, and documentation files ready for integration and
-  deployment.
+```javascript
+// Create an instance
+const chordpro = ChordproJS();
 
-Make the generated project production-ready, modular, and thoroughly documented for both end-users and developers.
+// Parse ChordPro text
+const parsed = chordpro.parse(`
+{title: Amazing Grace}
+[G]Amazing [D]grace! How [G]sweet the [D]sound
+`);
+
+// Render to element
+chordpro.renderToElement(chordproText, "#song-container");
+
+// Get HTML string
+const html = chordpro.renderToString(chordproText);
+```
+
+# CSS Styling
+
+Provide basic styling with classes including:
+
+- `.chord-line` for chord notation
+- `.lyric-line` for lyrics
+- `.comment` for comments
+- Style headings for titles and metadata
+
+## Documentation
+
+Include detailed documentation covering:
+
+- Installation methods
+- API reference
+- Usage examples
+- Extension points for adding features like transposition
+- Module architecture diagram showing parser/renderer flow
+
+Please implement this library using modern JavaScript practices, focusing on clean code and excellent documentation. The final solution should be ready for direct use in web projects.
