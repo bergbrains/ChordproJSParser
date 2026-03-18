@@ -1,5 +1,4 @@
 // src/core/renderer.js
-/* global document */
 /**
  * Render parsed ChordPro data to an HTML element
  * @param {object} parsedData - Data returned from parseChordPro

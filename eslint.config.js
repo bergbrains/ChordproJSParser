@@ -1,6 +1,7 @@
 // eslint.config.js
 import js from "@eslint/js";
 import prettier from "eslint-config-prettier";
+import globals from "globals";
 
 export default [
   js.configs.recommended,
@@ -17,21 +18,14 @@ export default [
       ecmaVersion: 2021,
       sourceType: "module",
       globals: {
-        browser: true,
-        es2021: true,
-        node: true,
-        jest: true,
-        describe: true,
-        test: true,
-        expect: true,
-        beforeEach: true,
-        afterEach: true,
-        beforeAll: true,
-        afterAll: true,
+        ...globals.browser,
+        ...globals.node,
+        ...globals.jest,
+        ...globals.es2021,
       },
     },
     rules: {
-      "no-unused-vars": "warn",
+      "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" }],
       "no-console": ["warn", { allow: ["error", "warn"] }],
       quotes: ["error", "double"],
       semi: ["error", "always"],

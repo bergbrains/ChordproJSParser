@@ -12,15 +12,13 @@
  * A manifest.json index and a state.json are maintained in that folder.
  */
 
-/* global window, document, Promise, JSON */
-
 (function (root, factory) {
-  if (typeof module !== 'undefined' && module.exports) {
+  if (typeof module !== "undefined" && module.exports) {
     module.exports = factory();
   } else {
     root.GoogleDriveProvider = factory();
   }
-})(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : this, function () {
+})(typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : this, function () {
 
   // ---------------------------------------------------------------------------
   // Replace these placeholders with your own credentials from Google Cloud Console.
@@ -31,14 +29,14 @@
   //   4. Create an API Key and restrict it to the Drive API.
   //   5. Replace the values below — never commit real credentials to source control.
   // ---------------------------------------------------------------------------
-  var DEFAULT_CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com';
-  var DEFAULT_API_KEY = 'YOUR_API_KEY';
+  var DEFAULT_CLIENT_ID = "YOUR_CLIENT_ID.apps.googleusercontent.com";
+  var DEFAULT_API_KEY = "YOUR_API_KEY";
 
-  var DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
-  var SCOPES = 'https://www.googleapis.com/auth/drive.file';
-  var FOLDER_NAME = 'ChordproJS';
-  var MANIFEST_FILE = 'manifest.json';
-  var STATE_FILE = 'state.json';
+  var DISCOVERY_DOC = "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest";
+  var SCOPES = "https://www.googleapis.com/auth/drive.file";
+  var FOLDER_NAME = "ChordproJS";
+  var MANIFEST_FILE = "manifest.json";
+  var STATE_FILE = "state.json";
 
   /**
    * GoogleDriveProvider constructor
@@ -53,6 +51,7 @@
 
     this._gapiReady = false;
     this._gisReady = false;
+    this._initPromise = null;
     this._tokenClient = null;
     this._accessToken = null;
     this._folderId = null;
@@ -71,10 +70,20 @@
   GoogleDriveProvider.prototype.init = function () {
     var self = this;
 
-    return Promise.all([
-      self._loadScript('https://apis.google.com/js/api.js').then(function () {
+    if (self._initPromise) {
+      return self._initPromise;
+    }
+
+    if (window.location.protocol === "file:") {
+      var error = new Error("GoogleDriveProvider: Cannot be used from 'file://' origin. Please run via a web server (e.g., http://localhost).");
+      console.error(error.message);
+      return Promise.reject(error);
+    }
+
+    self._initPromise = Promise.all([
+      self._loadScript("https://apis.google.com/js/api.js").then(function () {
         return new Promise(function (resolve, reject) {
-          window.gapi.load('client', {
+          window.gapi.load("client", {
             callback: function () {
               window.gapi.client
                 .init({
@@ -92,7 +101,7 @@
         });
       }),
 
-      self._loadScript('https://accounts.google.com/gsi/client').then(function () {
+      self._loadScript("https://accounts.google.com/gsi/client").then(function () {
         return new Promise(function (resolve) {
           self._tokenClient = window.google.accounts.oauth2.initTokenClient({
             client_id: self.clientId,
@@ -107,7 +116,11 @@
           resolve();
         });
       })
-    ]);
+    ]).then(function () {
+      return undefined;
+    });
+
+    return self._initPromise;
   };
 
   // ---------------------------------------------------------------------------
@@ -124,14 +137,16 @@
     var self = this;
 
     if (!self._gisReady || !self._gapiReady) {
-      return Promise.reject(new Error('GoogleDriveProvider: call init() before login()'));
+      return self.init().then(function () {
+        return self.login();
+      });
     }
 
     return new Promise(function (resolve, reject) {
       // Override the callback to resolve the promise
       self._tokenClient.callback = function (tokenResponse) {
         if (tokenResponse.error) {
-          reject(new Error('OAuth error: ' + tokenResponse.error));
+          reject(new Error("OAuth error: " + tokenResponse.error));
           return;
         }
         self._accessToken = tokenResponse.access_token;
@@ -141,9 +156,9 @@
 
       // If we already have a token, try a silent refresh first; otherwise popup
       if (self._accessToken) {
-        self._tokenClient.requestAccessToken({ prompt: '' });
+        self._tokenClient.requestAccessToken({ prompt: "" });
       } else {
-        self._tokenClient.requestAccessToken({ prompt: 'consent' });
+        self._tokenClient.requestAccessToken({ prompt: "consent" });
       }
     });
   };
@@ -175,7 +190,7 @@
           return self._fetchFileContent(manifestFile.id).then(function (text) {
             try {
               return JSON.parse(text);
-            } catch (e) {
+            } catch (_e) {
               return [];
             }
           });
@@ -212,7 +227,7 @@
       return self._findFile(fileName, folderId).then(function (existing) {
         var promise = existing
           ? self._updateFile(existing.id, content)
-          : self._createFile(fileName, 'text/plain', content, folderId);
+          : self._createFile(fileName, "text/plain", content, folderId);
 
         return promise.then(function (file) {
           var entry = {
@@ -267,7 +282,7 @@
         if (existing) {
           return self._updateFile(existing.id, content);
         }
-        return self._createFile(STATE_FILE, 'application/json', content, folderId);
+        return self._createFile(STATE_FILE, "application/json", content, folderId);
       });
     });
   };
@@ -289,7 +304,7 @@
         return self._fetchFileContent(stateFile.id).then(function (text) {
           try {
             return JSON.parse(text);
-          } catch (e) {
+          } catch (_e) {
             return null;
           }
         });
@@ -320,7 +335,7 @@
       " and trashed=false";
 
     return window.gapi.client.drive.files
-      .list({ q: query, fields: 'files(id, name)', spaces: 'drive' })
+      .list({ q: query, fields: "files(id, name)", spaces: "drive" })
       .then(function (response) {
         var files = response.result.files;
         if (files && files.length > 0) {
@@ -333,9 +348,9 @@
           .create({
             resource: {
               name: FOLDER_NAME,
-              mimeType: 'application/vnd.google-apps.folder'
+              mimeType: "application/vnd.google-apps.folder"
             },
-            fields: 'id'
+            fields: "id"
           })
           .then(function (response) {
             self._folderId = response.result.id;
@@ -352,14 +367,14 @@
    * @returns {Promise<{id: string, name: string}|null>}
    */
   GoogleDriveProvider.prototype._findFile = function (name, folderId) {
-    var safeName = name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    var safeName = name.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
     var query =
       "name='" + safeName + "'" +
       " and '" + folderId + "' in parents" +
       " and trashed=false";
 
     return window.gapi.client.drive.files
-      .list({ q: query, fields: 'files(id, name, modifiedTime)', spaces: 'drive' })
+      .list({ q: query, fields: "files(id, name, modifiedTime)", spaces: "drive" })
       .then(function (response) {
         var files = response.result.files;
         return files && files.length > 0 ? files[0] : null;
@@ -381,8 +396,8 @@
     return window.gapi.client.drive.files
       .list({
         q: query,
-        fields: 'files(id, name, modifiedTime)',
-        spaces: 'drive',
+        fields: "files(id, name, modifiedTime)",
+        spaces: "drive",
         pageSize: 1000
       })
       .then(function (response) {
@@ -401,9 +416,9 @@
 
     return window.gapi.client
       .request({
-        path: 'https://www.googleapis.com/drive/v3/files/' + fileId,
-        params: { alt: 'media' },
-        headers: { Authorization: 'Bearer ' + self._accessToken }
+        path: "https://www.googleapis.com/drive/v3/files/" + fileId,
+        params: { alt: "media" },
+        headers: { Authorization: "Bearer " + self._accessToken }
       })
       .then(function (response) {
         return response.body;
@@ -421,29 +436,29 @@
    */
   GoogleDriveProvider.prototype._createFile = function (name, mimeType, content, folderId) {
     var self = this;
-    var boundary = 'chordprojs_boundary_' + Date.now();
-    var delimiter = '--' + boundary;
-    var closeDelimiter = '--' + boundary + '--';
+    var boundary = "chordprojs_boundary_" + Date.now();
+    var delimiter = "--" + boundary;
+    var closeDelimiter = "--" + boundary + "--";
 
     var metadata = JSON.stringify({ name: name, parents: [folderId] });
 
     var body =
-      delimiter + '\r\n' +
-      'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-      metadata + '\r\n' +
-      delimiter + '\r\n' +
-      'Content-Type: ' + mimeType + '\r\n\r\n' +
-      content + '\r\n' +
+      delimiter + "\r\n" +
+      "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+      metadata + "\r\n" +
+      delimiter + "\r\n" +
+      "Content-Type: " + mimeType + "\r\n\r\n" +
+      content + "\r\n" +
       closeDelimiter;
 
     return window.gapi.client
       .request({
-        path: 'https://www.googleapis.com/upload/drive/v3/files',
-        method: 'POST',
-        params: { uploadType: 'multipart', fields: 'id, modifiedTime' },
+        path: "https://www.googleapis.com/upload/drive/v3/files",
+        method: "POST",
+        params: { uploadType: "multipart", fields: "id, modifiedTime" },
         headers: {
-          'Content-Type': 'multipart/related; boundary=' + boundary,
-          Authorization: 'Bearer ' + self._accessToken
+          "Content-Type": "multipart/related; boundary=" + boundary,
+          Authorization: "Bearer " + self._accessToken
         },
         body: body
       })
@@ -464,12 +479,12 @@
 
     return window.gapi.client
       .request({
-        path: 'https://www.googleapis.com/upload/drive/v3/files/' + fileId,
-        method: 'PATCH',
-        params: { uploadType: 'media', fields: 'id, modifiedTime' },
+        path: "https://www.googleapis.com/upload/drive/v3/files/" + fileId,
+        method: "PATCH",
+        params: { uploadType: "media", fields: "id, modifiedTime" },
         headers: {
-          'Content-Type': 'text/plain',
-          Authorization: 'Bearer ' + self._accessToken
+          "Content-Type": "text/plain",
+          Authorization: "Bearer " + self._accessToken
         },
         body: content
       })
@@ -493,7 +508,7 @@
       if (existing) {
         return self._updateFile(existing.id, content);
       }
-      return self._createFile(MANIFEST_FILE, 'application/json', content, folderId);
+      return self._createFile(MANIFEST_FILE, "application/json", content, folderId);
     });
   };
 
@@ -506,17 +521,17 @@
   GoogleDriveProvider.prototype._loadScript = function (src) {
     return new Promise(function (resolve, reject) {
       // Avoid loading the same script twice
-      var existing = document.querySelector('script[src="' + src + '"]');
+      var existing = document.querySelector("script[src=\"" + src + "\"]");
       if (existing) {
         resolve();
         return;
       }
-      var script = document.createElement('script');
+      var script = document.createElement("script");
       script.src = src;
       script.async = true;
       script.defer = true;
       script.onload = function () { resolve(); };
-      script.onerror = function () { reject(new Error('Failed to load script: ' + src)); };
+      script.onerror = function () { reject(new Error("Failed to load script: " + src)); };
       document.head.appendChild(script);
     });
   };

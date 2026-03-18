@@ -671,8 +671,12 @@
         });
 
         driveLoginBtn.addEventListener('click', async () => {
-            if (!driveProvider) return;
+            if (activeProvider !== 'drive') return;
+            if (!driveProvider) {
+                driveProvider = new GoogleDriveProvider();
+            }
             try {
+                await driveProvider.init();
                 await driveProvider.login();
                 updateDriveStatusUI(driveProvider.isAuthenticated());
                 await loadDriveSongs();

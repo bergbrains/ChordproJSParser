@@ -1,5 +1,4 @@
 // src/plugins/transpose.js
-/* global window */
 /**
  * Plugin for transposing chords
  */

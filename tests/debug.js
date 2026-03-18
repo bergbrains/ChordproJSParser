@@ -1,5 +1,4 @@
 // tests/debug.js
-/* global console */
 import { parseChordPro } from "../src/core/parser.js";
 
 // Test diagrams directive with empty value

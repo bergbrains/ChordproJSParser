@@ -1,5 +1,21 @@
 # ChordPro JS Renderer Documentation
 
+## Getting Started with Examples
+
+### Running the examples
+
+To properly use the Google Drive integration in the examples, you must run the project via a web server. Running directly from the file system (e.g., `file://.../file-list.html`) will fail during authentication due to security restrictions.
+
+You can use the built-in serve command:
+
+```bash
+npm run serve
+```
+
+Then navigate to `http://localhost:3000/examples/file-list.html` (or the port specified in your terminal).
+
+---
+
 ## Overview
 
 The ChordPro JS Renderer is a JavaScript module designed to easily integrate ChordPro-formatted song files into any web application. It parses standard ChordPro files and dynamically renders them into HTML, allowing customizable styling through CSS.
