@@ -83,8 +83,16 @@
     self._initPromise = Promise.all([
       self._loadScript("https://apis.google.com/js/api.js").then(function () {
         return new Promise(function (resolve, reject) {
+          if (!window.gapi) {
+            reject(new Error("GoogleDriveProvider: window.gapi not found after script load."));
+            return;
+          }
           window.gapi.load("client", {
             callback: function () {
+              if (!window.gapi.client) {
+                reject(new Error("GoogleDriveProvider: window.gapi.client not found after gapi.load."));
+                return;
+              }
               window.gapi.client
                 .init({
                   apiKey: self.apiKey,
@@ -94,31 +102,42 @@
                   self._gapiReady = true;
                   resolve();
                 })
-                .catch(reject);
+                .catch(function (err) {
+                  var msg = (err && err.details) || (err && err.message) || (err && JSON.stringify(err)) || "Unknown gapi.client.init error";
+                  reject(new Error("GoogleDriveProvider: gapi.client.init failed: " + msg));
+                });
             },
-            onerror: reject
+            onerror: function (err) {
+              reject(new Error("GoogleDriveProvider: gapi.load('client') failed: " + (err || "unknown error")));
+            }
           });
         });
       }),
 
       self._loadScript("https://accounts.google.com/gsi/client").then(function () {
-        return new Promise(function (resolve) {
-          self._tokenClient = window.google.accounts.oauth2.initTokenClient({
-            client_id: self.clientId,
-            scope: SCOPES,
-            callback: function (tokenResponse) {
-              if (tokenResponse && tokenResponse.access_token) {
-                self._accessToken = tokenResponse.access_token;
+        return new Promise(function (resolve, reject) {
+          if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+            reject(new Error("GoogleDriveProvider: window.google.accounts.oauth2 not found after script load."));
+            return;
+          }
+          try {
+            self._tokenClient = window.google.accounts.oauth2.initTokenClient({
+              client_id: self.clientId,
+              scope: SCOPES,
+              callback: function (tokenResponse) {
+                if (tokenResponse && tokenResponse.access_token) {
+                  self._accessToken = tokenResponse.access_token;
+                }
               }
-            }
-          });
-          self._gisReady = true;
-          resolve();
+            });
+            self._gisReady = true;
+            resolve();
+          } catch (err) {
+            reject(new Error("GoogleDriveProvider: initTokenClient failed: " + (err.message || "unknown error")));
+          }
         });
       })
-    ]).then(function () {
-      return undefined;
-    });
+    ]);
 
     return self._initPromise;
   };

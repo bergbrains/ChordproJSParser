@@ -408,8 +408,8 @@
     </div>
 </div>
 
-<script src="../dist/chordprojs.min.js"></script>
-<script src="../plugins/google-drive-provider.js"></script>
+    <script src="../dist/chordprojs.min.js"></script>
+    <script src="../plugins/google-drive-provider.js"></script>
 <script>
     // Check if ChordproJS (or factory) loaded
     if (typeof createChordproJS === 'undefined' && typeof ChordproJS === 'undefined') {
@@ -647,7 +647,8 @@
                 await driveProvider.init();
             } catch (err) {
                 console.error('Drive init error:', err);
-                alert('Failed to initialize Google Drive client: ' + err.message);
+                const msg = err.message || (typeof err === 'string' ? err : JSON.stringify(err));
+                alert('Failed to initialize Google Drive client: ' + msg);
                 activeProvider = 'local';
                 setActiveProviderUI('local');
                 return;
@@ -659,7 +660,8 @@
                     await driveProvider.login();
                 } catch (err) {
                     console.error('Drive login error:', err);
-                    alert('Google Drive sign-in failed: ' + err.message);
+                    const msg = err.message || (typeof err === 'string' ? err : JSON.stringify(err));
+                    alert('Google Drive sign-in failed: ' + msg);
                     activeProvider = 'local';
                     setActiveProviderUI('local');
                     return;
@@ -682,7 +684,8 @@
                 await loadDriveSongs();
             } catch (err) {
                 console.error('Drive login error:', err);
-                alert('Google Drive sign-in failed: ' + err.message);
+                const msg = err.message || (typeof err === 'string' ? err : JSON.stringify(err));
+                alert('Google Drive sign-in failed: ' + msg);
             }
         });
 
@@ -726,7 +729,8 @@
                 }
             } catch (err) {
                 console.error('Error loading from Drive:', err);
-                selectedFiles.innerHTML = '<p style="color:red">Error loading from Google Drive: ' + err.message + '</p>';
+                const msg = err.message || (typeof err === 'string' ? err : JSON.stringify(err));
+                selectedFiles.innerHTML = '<p style="color:red">Error loading from Google Drive: ' + msg + '</p>';
             }
         }
 
