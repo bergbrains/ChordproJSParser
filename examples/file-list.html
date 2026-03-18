@@ -160,6 +160,93 @@
             display: flex;
         }
 
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .close-modal {
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-primary {
+            background-color: teal;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-secondary {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
         .gear-menu-dropdown button {
             text-align: left;
             padding: 8px 12px;
@@ -381,11 +468,37 @@
                     <button id="refresh-files-btn">Refresh Files</button>
                     <button id="clear-files-btn">Clear Files</button>
                     <button id="clear-storage-btn">Clear Storage</button>
+                    <button id="google-config-btn">Google Drive Config</button>
                 </div>
             </div>
         </div>
         <div id="selected-files">
             <p>No songs selected</p>
+        </div>
+    </div>
+
+    <!-- Google Config Modal -->
+    <div id="google-config-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Google Drive Configuration</h2>
+                <span class="close-modal" id="close-config">&times;</span>
+            </div>
+            <p style="font-size: 0.8rem; color: #666; margin-bottom: 15px;">
+                Get these from the <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a>.
+            </p>
+            <div class="form-group">
+                <label for="config-client-id">Client ID</label>
+                <input type="text" id="config-client-id" placeholder="your-client-id.apps.googleusercontent.com">
+            </div>
+            <div class="form-group">
+                <label for="config-api-key">API Key (Optional)</label>
+                <input type="text" id="config-api-key" placeholder="your-api-key">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancel-config">Cancel</button>
+                <button class="btn-primary" id="save-config">Save & Connect</button>
+            </div>
         </div>
     </div>
 
@@ -586,6 +699,53 @@
         const driveLoginBtn = document.getElementById('drive-login-btn');
         const driveLoginLabel = document.getElementById('drive-login-label');
 
+        // Google Config Elements
+        const googleConfigBtn = document.getElementById('google-config-btn');
+        const googleConfigModal = document.getElementById('google-config-modal');
+        const closeConfig = document.getElementById('close-config');
+        const cancelConfig = document.getElementById('cancel-config');
+        const saveConfig = document.getElementById('save-config');
+        const configClientId = document.getElementById('config-client-id');
+        const configApiKey = document.getElementById('config-api-key');
+
+        // Load saved credentials
+        configClientId.value = localStorage.getItem('cp_google_client_id') || '';
+        configApiKey.value = localStorage.getItem('cp_google_api_key') || '';
+
+        function openGoogleConfig() {
+            googleConfigModal.style.display = 'block';
+            gearMenuDropdown.classList.remove('show');
+        }
+
+        function closeGoogleConfig() {
+            googleConfigModal.style.display = 'none';
+        }
+
+        googleConfigBtn.addEventListener('click', openGoogleConfig);
+        closeConfig.addEventListener('click', closeGoogleConfig);
+        cancelConfig.addEventListener('click', closeGoogleConfig);
+
+        saveConfig.addEventListener('click', () => {
+            const clientId = configClientId.value.trim();
+            const apiKey = configApiKey.value.trim();
+            localStorage.setItem('cp_google_client_id', clientId);
+            localStorage.setItem('cp_google_api_key', apiKey);
+            closeGoogleConfig();
+
+            // Re-initialize drive provider if we were using it
+            if (activeProvider === 'drive') {
+                driveProvider = null; // Force new instance with new credentials
+                useDriveBtn.click();
+            }
+        });
+
+        // Close modal if clicked outside
+        window.addEventListener('click', (event) => {
+            if (event.target === googleConfigModal) {
+                closeGoogleConfig();
+            }
+        });
+
         function setActiveProviderUI(provider) {
             if (provider === 'local') {
                 useLocalBtn.classList.add('active-provider');
@@ -619,7 +779,11 @@
             fileStorage.selectedFiles = [];
             if (fileStorage.loadSongs()) {
                 updateFileList();
-                toggleViewLink.style.display = 'inline-block';
+                if (fileStorage.currentFile) {
+                    toggleViewLink.style.display = 'inline-block';
+                } else {
+                    toggleViewLink.style.display = 'none';
+                }
             } else {
                 selectedFiles.innerHTML = '<p>No songs selected</p>';
                 toggleViewLink.style.display = 'none';
@@ -639,7 +803,12 @@
                     setActiveProviderUI('local');
                     return;
                 }
-                driveProvider = new GoogleDriveProvider();
+                const options = {};
+                const savedClientId = localStorage.getItem('cp_google_client_id');
+                const savedApiKey = localStorage.getItem('cp_google_api_key');
+                if (savedClientId) options.clientId = savedClientId;
+                if (savedApiKey) options.apiKey = savedApiKey;
+                driveProvider = new GoogleDriveProvider(options);
             }
 
             // Init GAPI/GIS if not already done
@@ -648,7 +817,16 @@
             } catch (err) {
                 console.error('Drive init error:', err);
                 const msg = err.message || (typeof err === 'string' ? err : JSON.stringify(err));
-                alert('Failed to initialize Google Drive client: ' + msg);
+
+                // If missing credentials, open config
+                if (msg.includes('Missing credentials')) {
+                    if (confirm('Google Drive credentials not set. Would you like to configure them now?')) {
+                        openGoogleConfig();
+                    }
+                } else {
+                    alert('Failed to initialize Google Drive client: ' + msg);
+                }
+
                 activeProvider = 'local';
                 setActiveProviderUI('local');
                 return;
@@ -675,7 +853,12 @@
         driveLoginBtn.addEventListener('click', async () => {
             if (activeProvider !== 'drive') return;
             if (!driveProvider) {
-                driveProvider = new GoogleDriveProvider();
+                const options = {};
+                const savedClientId = localStorage.getItem('cp_google_client_id');
+                const savedApiKey = localStorage.getItem('cp_google_api_key');
+                if (savedClientId) options.clientId = savedClientId;
+                if (savedApiKey) options.apiKey = savedApiKey;
+                driveProvider = new GoogleDriveProvider(options);
             }
             try {
                 await driveProvider.init();
@@ -685,7 +868,15 @@
             } catch (err) {
                 console.error('Drive login error:', err);
                 const msg = err.message || (typeof err === 'string' ? err : JSON.stringify(err));
-                alert('Google Drive sign-in failed: ' + msg);
+
+                // If missing credentials, open config
+                if (msg.includes('Missing credentials')) {
+                    if (confirm('Google Drive credentials not set. Would you like to configure them now?')) {
+                        openGoogleConfig();
+                    }
+                } else {
+                    alert('Google Drive sign-in failed: ' + msg);
+                }
             }
         });
 
@@ -764,7 +955,11 @@
             // Load saved songs from localStorage on page load
             if (fileStorage.loadSongs()) {
                 updateFileList();
-                toggleViewLink.style.display = 'inline-block';
+                if (fileStorage.currentFile) {
+                    toggleViewLink.style.display = 'inline-block';
+                } else {
+                    toggleViewLink.style.display = 'none';
+                }
             }
 
             // Event Listeners

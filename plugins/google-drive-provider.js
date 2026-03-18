@@ -77,8 +77,8 @@
       return self._initPromise;
     }
 
-    if (self.apiKey === "YOUR_API_KEY" || self.clientId === "YOUR_CLIENT_ID.apps.googleusercontent.com") {
-      var errDefault = new Error("GoogleDriveProvider: Default credentials (API Key or Client ID) detected. Please replace placeholders in 'plugins/google-drive-provider.js' or pass valid credentials to the constructor.");
+    if ((!self.apiKey || self.apiKey === "YOUR_API_KEY") && (!self.clientId || self.clientId === "YOUR_CLIENT_ID.apps.googleusercontent.com")) {
+      var errDefault = new Error("GoogleDriveProvider: Missing credentials (API Key or Client ID). Please replace placeholders in 'plugins/google-drive-provider.js' or pass valid credentials to the constructor.");
       console.error(errDefault.message);
       return Promise.reject(errDefault);
     }
@@ -102,11 +102,14 @@
                 reject(new Error("GoogleDriveProvider: window.gapi.client not found after gapi.load."));
                 return;
               }
+              var initOptions = {
+                discoveryDocs: [DISCOVERY_DOC]
+              };
+              if (self.apiKey && self.apiKey !== "YOUR_API_KEY") {
+                initOptions.apiKey = self.apiKey;
+              }
               window.gapi.client
-                .init({
-                  apiKey: self.apiKey,
-                  discoveryDocs: [DISCOVERY_DOC]
-                })
+                .init(initOptions)
                 .then(function () {
                   self._gapiReady = true;
                   resolve();
