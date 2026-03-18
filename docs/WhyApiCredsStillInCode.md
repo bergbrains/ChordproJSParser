@@ -8,7 +8,7 @@ The `apiKey` remains in the code as an optional configuration to support certain
 
 ### Solution: Using "Just Log In" Auth
 You can already achieve the `SheetEvaluator` behavior (where the user just logs in) with the current code:
--   **In the UI:** In the "Google Drive Configuration" modal (found under the gear icon in `file-list.html`), you can leave the **API Key field blank** and only provide your **Client ID**.
+-   **In the UI:** In the "User Preferences" modal (found under the gear icon in `file-list.html`), you can leave the **Google API Key field blank** and only provide your **Google Client ID**.
 -   **In the Code:** The `GoogleDriveProvider` has been updated to initialize successfully even if `apiKey` is missing or set to the placeholder, provided that `clientId` is valid.
 
 ### Recommendation

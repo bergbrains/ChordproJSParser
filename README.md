@@ -364,3 +364,19 @@ document.querySelectorAll('.chord-line').forEach(el => {
     el.style.color = '#0066cc';
 });
 ```
+
+## Running Examples
+
+The Google Drive integration requires the web page to be served from a web server (e.g. `http://localhost`). Running directly from the file system (`file://`) will cause authentication to fail.
+
+To run the examples locally using the built-in server:
+
+```bash
+npm run serve
+```
+
+Then navigate to `http://localhost:3000/examples/file-list.html`.
+
+## License
+
+MIT
