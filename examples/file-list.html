@@ -465,6 +465,7 @@
             <div class="form-group">
                 <label for="theme-select">Theme</label>
                 <select id="theme-select">
+                    <option value="system">System Default</option>
                     <option value="light">Light</option>
                     <option value="dark">Dark</option>
                 </select>
@@ -877,15 +878,27 @@
                 apiKeyInput.value = prefs.googleApiKey || '';
             }
 
-            function applyPreferences() {
+            // Apply theme
+            function updateTheme() {
                 const prefs = getPreferences();
+                let theme = prefs.theme;
 
-                // Apply theme
-                if (prefs.theme === 'dark') {
+                if (theme === 'system') {
+                    theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                }
+
+                if (theme === 'dark') {
                     document.body.classList.add('dark-theme');
                 } else {
                     document.body.classList.remove('dark-theme');
                 }
+            }
+
+            function applyPreferences() {
+                const prefs = getPreferences();
+
+                // Apply theme
+                updateTheme();
 
                 // Apply zoom from prefs if it exists
                 if (prefs.zoomLevel) {
@@ -904,6 +917,14 @@
                     renderChordPro();
                 }
             }
+
+            // Listen for system theme changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                const prefs = getPreferences();
+                if (prefs.theme === 'system') {
+                    updateTheme();
+                }
+            });
 
             // Toggle fullscreen mode
             function toggleFullScreen() {

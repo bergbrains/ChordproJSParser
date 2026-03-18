@@ -3,7 +3,7 @@
 const PREFERENCES_KEY = "user_preferences";
 
 const defaultPreferences = {
-  theme: "light",
+  theme: "system",
   showChords: true,
   showComments: true,
   zoomLevel: 1.0,
@@ -15,7 +15,7 @@ const defaultPreferences = {
 const validatePreferences = (data) => {
   const validated = {};
 
-  if (data.theme === "light" || data.theme === "dark") {
+  if (data.theme === "light" || data.theme === "dark" || data.theme === "system") {
     validated.theme = data.theme;
   }
 

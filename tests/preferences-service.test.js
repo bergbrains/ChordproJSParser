@@ -44,7 +44,7 @@ describe("PreferencesService", () => {
   test("should return default preferences when nothing is stored", () => {
     const prefs = getPreferences();
     expect(prefs).toEqual({
-      theme: "light",
+      theme: "system",
       showChords: true,
       showComments: true,
       zoomLevel: 1.0,
@@ -88,7 +88,7 @@ describe("PreferencesService", () => {
   test("should handle invalid JSON in localStorage", () => {
     window.localStorage.setItem("user_preferences", "invalid-json");
     const prefs = getPreferences();
-    expect(prefs.theme).toBe("light"); // returns default
+    expect(prefs.theme).toBe("system"); // returns default
     expect(console.error).toHaveBeenCalled();
   });
 
@@ -96,7 +96,7 @@ describe("PreferencesService", () => {
     savePreferences({ theme: "dark" });
     resetPreferences();
     const prefs = getPreferences();
-    expect(prefs.theme).toBe("light");
+    expect(prefs.theme).toBe("system");
   });
 
   test("should throw error if saving fails", () => {
