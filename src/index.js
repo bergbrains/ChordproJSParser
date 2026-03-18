@@ -1,6 +1,7 @@
 // src/index.js
 import { parseChordPro } from "./core/parser";
 import { renderToElement, renderToHTML } from "./core/renderer";
+import { getPreferences, savePreferences, resetPreferences } from "./services/preferences-service";
 import "../style.css";
 
 /**
@@ -116,11 +117,14 @@ function createChordproJS(options = {}) {
 }
 
 // Export both class and factory
-export { ChordproJS, createChordproJS };
+export { ChordproJS, createChordproJS, getPreferences, savePreferences, resetPreferences };
 export default createChordproJS;
 
 // For UMD use
 if (typeof window !== "undefined") {
   window.ChordproJS = ChordproJS;
   window.createChordproJS = createChordproJS;
+  window.getPreferences = getPreferences;
+  window.savePreferences = savePreferences;
+  window.resetPreferences = resetPreferences;
 }

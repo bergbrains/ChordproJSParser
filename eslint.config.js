@@ -21,7 +21,9 @@ export default [
         ...globals.browser,
         ...globals.node,
         ...globals.jest,
-        ...globals.es2021,
+        localStorage: "readonly",
+        console: "readonly",
+        JSON: "readonly",
       },
     },
     rules: {
