@@ -179,6 +179,151 @@
             background-color: #f5f5f5;
         }
 
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .close-modal {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-modal:hover,
+        .close-modal:focus {
+            color: black;
+            text-decoration: none;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"],
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .form-group input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+
+        .modal-footer button {
+            margin-right: 0;
+        }
+
+        .secondary-btn {
+            background-color: #6c757d;
+        }
+
+        .secondary-btn:hover {
+            background-color: #5a6268;
+        }
+
+        /* Dark Theme Support */
+        body.dark-theme {
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+        }
+
+        body.dark-theme .app-header {
+            background-color: #333;
+        }
+
+        body.dark-theme .file-list-column {
+            background-color: #252525;
+            border-right: 4px solid #444;
+        }
+
+        body.dark-theme #selected-files {
+            background-color: #1e1e1e;
+            border-color: #444;
+        }
+
+        body.dark-theme .file-item:hover {
+            background-color: #333;
+        }
+
+        body.dark-theme .file-item.active {
+            background-color: #3d3d3d;
+        }
+
+        body.dark-theme .modal-content {
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+            border-color: #444;
+        }
+
+        body.dark-theme .form-group input[type="text"],
+        body.dark-theme .form-group select {
+            background-color: #3d3d3d;
+            color: #e0e0e0;
+            border-color: #555;
+        }
+
+        body.dark-theme #preview {
+            background-color: #1e1e1e;
+            border-color: #444;
+            color: #e0e0e0;
+        }
+
+        body.dark-theme #song-container {
+            background-color: #1e1e1e;
+        }
+
         /* File list styles */
         #selected-files {
             flex-grow: 1;
@@ -279,6 +424,7 @@
                 <div id="gear-menu-dropdown" class="gear-menu-dropdown">
                     <button id="open-btn">Load Files</button>
                     <button id="refresh-files-btn">Refresh Files</button>
+                    <button id="preferences-btn">Preferences</button>
                     <button id="clear-files-btn">Clear Files</button>
                     <button id="clear-storage-btn">Clear Storage</button>
                 </div>
@@ -305,6 +451,53 @@
 
         <pre id="preview"></pre>
         <div id="song-container"></div>
+    </div>
+</div>
+
+<!-- Preferences Modal -->
+<div id="preferences-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>User Preferences</h2>
+            <span class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="theme-select">Theme</label>
+                <select id="theme-select">
+                    <option value="system">System Default</option>
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="show-chords-checkbox"> Show Chords
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="show-comments-checkbox"> Show Comments
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="auto-load-checkbox"> Auto-load Last Song
+                </label>
+            </div>
+            <div class="form-group">
+                <label for="client-id-input">Google Client ID</label>
+                <input type="text" id="client-id-input" placeholder="Enter Client ID">
+            </div>
+            <div class="form-group">
+                <label for="api-key-input">Google API Key (Optional)</label>
+                <input type="text" id="api-key-input" placeholder="Enter API Key">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="reset-prefs-btn" class="secondary-btn">Reset Defaults</button>
+            <button id="save-prefs-btn">Save Changes</button>
+        </div>
     </div>
 </div>
 
@@ -335,8 +528,28 @@
         const zoomOutBtn = document.getElementById('zoom-out-btn');
         const zoomResetBtn = document.getElementById('zoom-reset-btn');
 
+        // Preferences elements
+        const preferencesBtn = document.getElementById('preferences-btn');
+        const preferencesModal = document.getElementById('preferences-modal');
+        const closeModalSpan = document.querySelector('.close-modal');
+        const savePrefsBtn = document.getElementById('save-prefs-btn');
+        const resetPrefsBtn = document.getElementById('reset-prefs-btn');
+        const themeSelect = document.getElementById('theme-select');
+        const showChordsCheckbox = document.getElementById('show-chords-checkbox');
+        const showCommentsCheckbox = document.getElementById('show-comments-checkbox');
+        const autoLoadCheckbox = document.getElementById('auto-load-checkbox');
+        const clientIdInput = document.getElementById('client-id-input');
+        const apiKeyInput = document.getElementById('api-key-input');
+
         // Track current view state
         let isSourceView = false;
+        let currentPreferences = getPreferences();
+
+        // Zoom level variables
+        let currentZoom = 1.0;
+        const zoomStep = 0.1;
+        const maxZoom = 2.0;
+        const minZoom = 0.5;
 
         // File storage
         const fileStorage = {
@@ -477,7 +690,7 @@
         const chordpro = (typeof createChordproJS !== 'undefined')
             ? createChordproJS()
             : (typeof ChordproJS !== 'undefined')
-                ? ChordproJS()
+                ? new ChordproJS()
                 : null;
 
         if (!chordpro) {
@@ -488,6 +701,9 @@
 
         // Only execute the rest of the UI initialization if we have a valid chordpro instance.
         if (chordpro) {
+            // Apply initial preferences
+            applyPreferences();
+
             // Load saved songs from localStorage on page load
             if (fileStorage.loadSongs()) {
                 updateFileList();
@@ -530,11 +746,6 @@
             });
 
             // Zoom controls
-            let currentZoom = 1.0;
-            const zoomStep = 0.1;
-            const maxZoom = 2.0;
-            const minZoom = 0.5;
-
             zoomInBtn.addEventListener('click', () => {
                 if (currentZoom < maxZoom) {
                     currentZoom += zoomStep;
@@ -577,6 +788,52 @@
                 refreshFiles();
             });
 
+            // Preferences button event listener
+            preferencesBtn.addEventListener('click', () => {
+                loadPrefsToModal();
+                preferencesModal.style.display = 'block';
+                gearMenuDropdown.classList.remove('show');
+            });
+
+            // Close modal when clicking (x)
+            closeModalSpan.addEventListener('click', () => {
+                preferencesModal.style.display = 'none';
+            });
+
+            // Close modal when clicking outside of it
+            window.addEventListener('click', (event) => {
+                if (event.target == preferencesModal) {
+                    preferencesModal.style.display = 'none';
+                }
+            });
+
+            // Save preferences
+            savePrefsBtn.addEventListener('click', () => {
+                const newPrefs = {
+                    theme: themeSelect.value,
+                    showChords: showChordsCheckbox.checked,
+                    showComments: showCommentsCheckbox.checked,
+                    autoLoadLastSong: autoLoadCheckbox.checked,
+                    googleClientId: clientIdInput.value,
+                    googleApiKey: apiKeyInput.value,
+                    zoomLevel: currentZoom // Persist current zoom level too
+                };
+                savePreferences(newPrefs);
+                currentPreferences = newPrefs;
+                applyPreferences();
+                preferencesModal.style.display = 'none';
+            });
+
+            // Reset preferences
+            resetPrefsBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to reset all preferences to defaults?')) {
+                    resetPreferences();
+                    currentPreferences = getPreferences();
+                    loadPrefsToModal();
+                    applyPreferences();
+                }
+            });
+
             // Clear files button event listener
             clearFilesBtn.addEventListener('click', () => {
                 // If there are selected files, clear only those, otherwise clear all files
@@ -611,6 +868,64 @@
             });
 
             // Functions
+            function loadPrefsToModal() {
+                const prefs = getPreferences();
+                themeSelect.value = prefs.theme;
+                showChordsCheckbox.checked = prefs.showChords;
+                showCommentsCheckbox.checked = prefs.showComments;
+                autoLoadCheckbox.checked = prefs.autoLoadLastSong;
+                clientIdInput.value = prefs.googleClientId || '';
+                apiKeyInput.value = prefs.googleApiKey || '';
+            }
+
+            // Apply theme
+            function updateTheme() {
+                const prefs = getPreferences();
+                let theme = prefs.theme;
+
+                if (theme === 'system') {
+                    theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                }
+
+                if (theme === 'dark') {
+                    document.body.classList.add('dark-theme');
+                } else {
+                    document.body.classList.remove('dark-theme');
+                }
+            }
+
+            function applyPreferences() {
+                const prefs = getPreferences();
+
+                // Apply theme
+                updateTheme();
+
+                // Apply zoom from prefs if it exists
+                if (prefs.zoomLevel) {
+                    currentZoom = prefs.zoomLevel;
+                    applyZoom();
+                }
+
+                // Update chordpro instance options
+                chordpro.setOptions({
+                    showChords: prefs.showChords,
+                    showComments: prefs.showComments
+                });
+
+                // Re-render if there's a current file
+                if (fileStorage.currentFile && !isSourceView) {
+                    renderChordPro();
+                }
+            }
+
+            // Listen for system theme changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                const prefs = getPreferences();
+                if (prefs.theme === 'system') {
+                    updateTheme();
+                }
+            });
+
             // Toggle fullscreen mode
             function toggleFullScreen() {
                 const songDisplayColumn = document.querySelector('.song-display-column');
@@ -903,17 +1218,33 @@
                     });
                 });
 
-                // Select first file by default if no selections are maintained
+                // Select first file by default or the last opened one if auto-load is enabled
                 if (fileStorage.files.length > 0 && !maintainSelections) {
-                    fileStorage.currentFile = fileStorage.files[0];
-                    fileStorage.selectedFiles = [fileStorage.files[0]]; // Initialize selectedFiles with first file
-                    document.querySelector('.file-item').classList.add('active');
+                    const prefs = getPreferences();
+                    let fileToSelect = fileStorage.files[0];
+
+                    if (prefs.autoLoadLastSong) {
+                        const lastKey = localStorage.getItem('lastOpenedSongKey');
+                        if (lastKey) {
+                            const found = fileStorage.files.find(f =>
+                                `song_${f.name}_${f.lastModified}` === lastKey);
+                            if (found) fileToSelect = found;
+                        }
+                    }
+
+                    fileStorage.currentFile = fileToSelect;
+                    fileStorage.selectedFiles = [fileToSelect]; // Initialize selectedFiles with current file
+
+                    // Mark as active in the UI (re-selecting the items since we just rebuilt the HTML)
+                    const index = fileStorage.files.indexOf(fileToSelect);
+                    const items = document.querySelectorAll('.file-item');
+                    if (items[index]) items[index].classList.add('active');
 
                     // Reset view state and link text
                     isSourceView = false;
                     toggleViewLink.textContent = 'View Source';
 
-                    renderChordPro(); // Automatically render the first file
+                    renderChordPro(); // Automatically render the selected file
                 } else if (maintainSelections && fileStorage.currentFile) {
                     // If maintaining selections and we have a current file, render it
                     renderChordPro();
@@ -943,6 +1274,13 @@
 
             function renderChordPro() {
                 if (!fileStorage.currentFile) return;
+
+                // Save this as the last opened song if autoLoadLastSong is enabled
+                const prefs = getPreferences();
+                if (prefs.autoLoadLastSong) {
+                    const songKey = `song_${fileStorage.currentFile.name}_${fileStorage.currentFile.lastModified}`;
+                    localStorage.setItem('lastOpenedSongKey', songKey);
+                }
 
                 // Check if it's a File-like object from localStorage
                 if (fileStorage.currentFile.getContent) {
