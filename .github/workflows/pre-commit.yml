@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - '**'
-  pull_request:
-    branches: [ main ]
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -20,24 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: Run Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-
-      - name: Set up Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
-        with:
-          node-version: '24'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run tests
-        run: npm run test
-
+  # Stage 1 (parallel): linting/formatting checks and unit tests
   pre-commit:
     name: Pre-commit Checks
     runs-on: ubuntu-latest
@@ -70,13 +51,32 @@ jobs:
       - name: Clear pre-commit cache
         run: pre-commit clean
 
-      - name: Install pre-commit hooks and run
+      - name: Run pre-commit hooks
         run: pre-commit run --all-files
 
-  build-pages:
-    name: Build GitHub Pages
+  test:
+    name: Run Tests
     runs-on: ubuntu-latest
-    needs: [ test, pre-commit ]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm run test
+
+  # Stage 2: build the JS bundle and assemble the Pages site
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [ pre-commit, test ]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
@@ -94,9 +94,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build site
+      - name: Build JS bundle
+        run: npm run build
+
+      - name: Assemble Pages site
         run: |
-          npm run build
           rm -rf _site
           mkdir -p _site
           cp -R dist _site/dist
@@ -116,7 +118,7 @@ jobs:
           </html>
           EOF
 
-      - name: Smoke test site over HTTP
+      - name: Smoke test site
         run: |
           set -euo pipefail
           python3 -m http.server 4173 --bind 127.0.0.1 --directory _site >/tmp/chordpro-pages.log 2>&1 &
@@ -127,7 +129,6 @@ jobs:
           }
           trap cleanup EXIT
 
-          # Wait for server startup to avoid flaky connection-refused failures.
           for _ in $(seq 1 20); do
             if curl --fail --silent --show-error http://127.0.0.1:4173/ >/dev/null; then
               break
@@ -145,19 +146,24 @@ jobs:
           curl --fail --silent --show-error http://127.0.0.1:4173/style.css >/dev/null
           curl --fail --silent --show-error http://127.0.0.1:4173/dist/chordprojs.min.js >/dev/null
 
+      # Upload the Pages artifact only on main so that GitHub does not
+      # trigger an extra "pages build and deployment" run on every branch push.
       - name: Configure Pages
+        if: github.ref == 'refs/heads/main'
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
 
       - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v4
         with:
           path: ./_site
 
-  deploy-pages:
+  # Stage 3: deploy to GitHub Pages (main branch only)
+  deploy:
     name: Deploy GitHub Pages
     runs-on: ubuntu-latest
-    needs: build-pages
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
