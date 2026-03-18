@@ -235,6 +235,87 @@
             color: #004499;
         }
 
+        /* Storage provider toggle */
+        .provider-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 0;
+            flex-wrap: wrap;
+        }
+
+        .provider-toggle {
+            display: flex;
+            background-color: rgba(255,255,255,0.15);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .provider-toggle button {
+            padding: 4px 12px;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border-radius: 0;
+        }
+
+        .provider-toggle button.active-provider {
+            background-color: rgba(255,255,255,0.35);
+            font-weight: bold;
+        }
+
+        .provider-toggle button:hover:not(.active-provider) {
+            background-color: rgba(255,255,255,0.2);
+        }
+
+        .drive-status {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.85);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .drive-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #aaa;
+            display: inline-block;
+        }
+
+        .drive-status .dot.connected {
+            background-color: #4caf50;
+        }
+
+        #drive-login-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background-color: white;
+            color: #444;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        #drive-login-btn:hover {
+            background-color: #f1f3f4;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+        }
+
+        #drive-login-btn .google-icon {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
         /* Song display styles are now imported from the main stylesheet */
 
         #preview {
@@ -256,6 +337,25 @@
 <!-- Header that spans across the page -->
 <header class="app-header">
     <h1>ChordproJS Parser</h1>
+    <div class="provider-bar">
+        <div class="provider-toggle">
+            <button id="use-local-btn" class="active-provider" title="Use browser localStorage">💾 Local</button>
+            <button id="use-drive-btn" title="Use Google Drive">☁️ Google Drive</button>
+        </div>
+        <div class="drive-status" id="drive-status" style="display:none;">
+            <span class="dot" id="drive-dot"></span>
+            <span id="drive-status-text">Not signed in</span>
+            <button id="drive-login-btn">
+                <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                <span id="drive-login-label">Sign in</span>
+            </button>
+        </div>
+    </div>
     <div class="header-buttons">
         <!-- Buttons moved to song list section -->
         <!-- Additional buttons can be added here -->
@@ -309,6 +409,7 @@
 </div>
 
 <script src="../dist/chordprojs.min.js"></script>
+<script src="../plugins/google-drive-provider.js"></script>
 <script>
     // Check if ChordproJS (or factory) loaded
     if (typeof createChordproJS === 'undefined' && typeof ChordproJS === 'undefined') {
@@ -470,6 +571,170 @@
                 }
             }
         };
+
+        // ---------------------------------------------------------------------------
+        // Google Drive provider integration
+        // ---------------------------------------------------------------------------
+        let activeProvider = 'local'; // 'local' | 'drive'
+        let driveProvider = null;
+
+        const useLocalBtn = document.getElementById('use-local-btn');
+        const useDriveBtn = document.getElementById('use-drive-btn');
+        const driveStatusEl = document.getElementById('drive-status');
+        const driveDot = document.getElementById('drive-dot');
+        const driveStatusText = document.getElementById('drive-status-text');
+        const driveLoginBtn = document.getElementById('drive-login-btn');
+        const driveLoginLabel = document.getElementById('drive-login-label');
+
+        function setActiveProviderUI(provider) {
+            if (provider === 'local') {
+                useLocalBtn.classList.add('active-provider');
+                useDriveBtn.classList.remove('active-provider');
+                driveStatusEl.style.display = 'none';
+            } else {
+                useDriveBtn.classList.add('active-provider');
+                useLocalBtn.classList.remove('active-provider');
+                driveStatusEl.style.display = 'flex';
+            }
+        }
+
+        function updateDriveStatusUI(connected) {
+            if (connected) {
+                driveDot.classList.add('connected');
+                driveStatusText.textContent = 'Connected';
+                driveLoginLabel.textContent = 'Switch account';
+            } else {
+                driveDot.classList.remove('connected');
+                driveStatusText.textContent = 'Not signed in';
+                driveLoginLabel.textContent = 'Sign in';
+            }
+        }
+
+        useLocalBtn.addEventListener('click', () => {
+            activeProvider = 'local';
+            setActiveProviderUI('local');
+            // Reload songs from localStorage
+            fileStorage.files = [];
+            fileStorage.currentFile = null;
+            fileStorage.selectedFiles = [];
+            if (fileStorage.loadSongs()) {
+                updateFileList();
+                toggleViewLink.style.display = 'inline-block';
+            } else {
+                selectedFiles.innerHTML = '<p>No songs selected</p>';
+                toggleViewLink.style.display = 'none';
+                preview.style.display = 'none';
+                songContainer.innerHTML = '';
+            }
+        });
+
+        useDriveBtn.addEventListener('click', async () => {
+            activeProvider = 'drive';
+            setActiveProviderUI('drive');
+
+            if (!driveProvider) {
+                if (typeof GoogleDriveProvider === 'undefined') {
+                    alert('GoogleDriveProvider script not loaded.');
+                    activeProvider = 'local';
+                    setActiveProviderUI('local');
+                    return;
+                }
+                driveProvider = new GoogleDriveProvider();
+            }
+
+            // Init GAPI/GIS if not already done
+            try {
+                await driveProvider.init();
+            } catch (err) {
+                console.error('Drive init error:', err);
+                alert('Failed to initialize Google Drive client: ' + err.message);
+                activeProvider = 'local';
+                setActiveProviderUI('local');
+                return;
+            }
+
+            // If not yet authenticated, trigger login
+            if (!driveProvider.isAuthenticated()) {
+                try {
+                    await driveProvider.login();
+                } catch (err) {
+                    console.error('Drive login error:', err);
+                    alert('Google Drive sign-in failed: ' + err.message);
+                    activeProvider = 'local';
+                    setActiveProviderUI('local');
+                    return;
+                }
+            }
+
+            updateDriveStatusUI(driveProvider.isAuthenticated());
+            await loadDriveSongs();
+        });
+
+        driveLoginBtn.addEventListener('click', async () => {
+            if (!driveProvider) return;
+            try {
+                await driveProvider.login();
+                updateDriveStatusUI(driveProvider.isAuthenticated());
+                await loadDriveSongs();
+            } catch (err) {
+                console.error('Drive login error:', err);
+                alert('Google Drive sign-in failed: ' + err.message);
+            }
+        });
+
+        async function loadDriveSongs() {
+            selectedFiles.innerHTML = '<p>Loading from Google Drive…</p>';
+            try {
+                const manifest = await driveProvider.listSongs();
+                fileStorage.files = manifest.map(entry => ({
+                    id: entry.id,
+                    name: entry.name,
+                    title: entry.name.replace(/\.[^.]+$/, ''),
+                    lastModified: entry.lastModified,
+                    driveId: entry.id,
+                    getContent: null // loaded on demand
+                }));
+
+                // Try to restore last-opened song from Drive state
+                let lastOpenedId = null;
+                try {
+                    const state = await driveProvider.loadState();
+                    if (state && state.lastOpenedId) {
+                        lastOpenedId = state.lastOpenedId;
+                    }
+                } catch (_) { /* ignore */ }
+
+                if (fileStorage.files.length > 0) {
+                    updateFileList();
+                    toggleViewLink.style.display = 'inline-block';
+
+                    // Restore last opened file if available
+                    if (lastOpenedId) {
+                        const lastFile = fileStorage.files.find(f => f.driveId === lastOpenedId);
+                        if (lastFile) {
+                            fileStorage.currentFile = lastFile;
+                            renderChordPro();
+                        }
+                    }
+                } else {
+                    selectedFiles.innerHTML = '<p>No songs in Google Drive</p>';
+                    toggleViewLink.style.display = 'none';
+                }
+            } catch (err) {
+                console.error('Error loading from Drive:', err);
+                selectedFiles.innerHTML = '<p style="color:red">Error loading from Google Drive: ' + err.message + '</p>';
+            }
+        }
+
+        // Wrap file upload to also save to Drive when active
+        async function saveFileToDrive(file, content) {
+            if (!driveProvider || !driveProvider.isAuthenticated()) return;
+            try {
+                await driveProvider.saveSong(file.name, content);
+            } catch (err) {
+                console.error('Error saving to Drive:', err);
+            }
+        }
 
         // Create an instance of ChordproJS
         // The UMD bundle may expose either `createChordproJS` or a global `ChordproJS` factory.
@@ -784,6 +1049,11 @@
                         // Save to localStorage
                         fileStorage.saveSong(file, content);
 
+                        // Also save to Google Drive if active
+                        if (activeProvider === 'drive') {
+                            saveFileToDrive(file, content);
+                        }
+
                         // Increment processed count
                         processedCount++;
 
@@ -923,6 +1193,19 @@
             function viewSourceFile() {
                 if (!fileStorage.currentFile) return;
 
+                // Drive file: fetch content on demand
+                if (activeProvider === 'drive' && fileStorage.currentFile.driveId) {
+                    preview.textContent = 'Loading…';
+                    preview.style.display = 'block';
+                    songContainer.style.display = 'none';
+                    driveProvider.loadSong(fileStorage.currentFile.driveId).then(content => {
+                        preview.textContent = content;
+                    }).catch(err => {
+                        preview.textContent = 'Error loading from Drive: ' + err.message;
+                    });
+                    return;
+                }
+
                 // Check if it's a File-like object from localStorage
                 if (fileStorage.currentFile.getContent) {
                     // Use the getContent method for File-like objects
@@ -943,6 +1226,27 @@
 
             function renderChordPro() {
                 if (!fileStorage.currentFile) return;
+
+                // Drive file: fetch content on demand, then save state
+                if (activeProvider === 'drive' && fileStorage.currentFile.driveId) {
+                    songContainer.innerHTML = '<p>Loading from Google Drive…</p>';
+                    preview.style.display = 'none';
+                    songContainer.style.display = 'block';
+                    driveProvider.loadSong(fileStorage.currentFile.driveId).then(content => {
+                        try {
+                            chordpro.renderToElement(content, '#song-container');
+                        } catch (error) {
+                            songContainer.innerHTML = `<p style="color: red;">Error parsing ChordPro file: ${error.message}</p>`;
+                            console.error('ChordPro parsing error:', error);
+                        }
+                        // Persist last-opened song in Drive state
+                        driveProvider.saveState({ lastOpenedId: fileStorage.currentFile.driveId })
+                            .catch(err => console.warn('Could not save Drive state:', err));
+                    }).catch(err => {
+                        songContainer.innerHTML = `<p style="color: red;">Error loading from Google Drive: ${err.message}</p>`;
+                    });
+                    return;
+                }
 
                 // Check if it's a File-like object from localStorage
                 if (fileStorage.currentFile.getContent) {
