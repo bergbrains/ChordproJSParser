@@ -13,8 +13,11 @@
  */
 
 (function (root, factory) {
+  /* global define */
   if (typeof module !== "undefined" && module.exports) {
     module.exports = factory();
+  } else if (typeof define === "function" && define.amd) {
+    define(factory);
   } else {
     root.GoogleDriveProvider = factory();
   }
@@ -74,10 +77,16 @@
       return self._initPromise;
     }
 
+    if (self.apiKey === "YOUR_API_KEY" || self.clientId === "YOUR_CLIENT_ID.apps.googleusercontent.com") {
+      var errDefault = new Error("GoogleDriveProvider: Default credentials (API Key or Client ID) detected. Please replace placeholders in 'plugins/google-drive-provider.js' or pass valid credentials to the constructor.");
+      console.error(errDefault.message);
+      return Promise.reject(errDefault);
+    }
+
     if (window.location.protocol === "file:") {
-      var error = new Error("GoogleDriveProvider: Cannot be used from 'file://' origin. Please run via a web server (e.g., http://localhost).");
-      console.error(error.message);
-      return Promise.reject(error);
+      var errProtocol = new Error("GoogleDriveProvider: Cannot be used from 'file://' origin. Please run via a web server (e.g., http://localhost).");
+      console.error(errProtocol.message);
+      return Promise.reject(errProtocol);
     }
 
     self._initPromise = Promise.all([
@@ -104,6 +113,12 @@
                 })
                 .catch(function (err) {
                   var msg = (err && err.details) || (err && err.message) || (err && JSON.stringify(err)) || "Unknown gapi.client.init error";
+
+                  // Check if it's an API key error
+                  if (msg.indexOf("API_KEY_INVALID") !== -1 || msg.indexOf("API key not valid") !== -1) {
+                    msg = "Invalid API key. Ensure you have replaced 'YOUR_API_KEY' in 'plugins/google-drive-provider.js' or passed a valid apiKey to the constructor. See: https://console.cloud.google.com/apis/credentials";
+                  }
+
                   reject(new Error("GoogleDriveProvider: gapi.client.init failed: " + msg));
                 });
             },
