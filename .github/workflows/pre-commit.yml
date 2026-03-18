@@ -118,10 +118,29 @@ jobs:
 
       - name: Smoke test site over HTTP
         run: |
-          python3 -m http.server 4173 --directory _site >/tmp/chordpro-pages.log 2>&1 &
+          set -euo pipefail
+          python3 -m http.server 4173 --bind 127.0.0.1 --directory _site >/tmp/chordpro-pages.log 2>&1 &
           server_pid=$!
-          trap 'kill "$server_pid"' EXIT
-          curl --fail --silent --show-error http://127.0.0.1:4173/ >/dev/null
+          cleanup() {
+            kill "$server_pid" 2>/dev/null || true
+            wait "$server_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          # Wait for server startup to avoid flaky connection-refused failures.
+          for _ in $(seq 1 20); do
+            if curl --fail --silent --show-error http://127.0.0.1:4173/ >/dev/null; then
+              break
+            fi
+            sleep 0.5
+          done
+
+          if ! curl --fail --silent --show-error http://127.0.0.1:4173/ >/dev/null; then
+            echo "Timed out waiting for local HTTP server" >&2
+            cat /tmp/chordpro-pages.log >&2 || true
+            exit 1
+          fi
+
           curl --fail --silent --show-error http://127.0.0.1:4173/examples/basic.html | grep -q 'ChordproJS Basic Example'
           curl --fail --silent --show-error http://127.0.0.1:4173/style.css >/dev/null
           curl --fail --silent --show-error http://127.0.0.1:4173/dist/chordprojs.min.js >/dev/null
