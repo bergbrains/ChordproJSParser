@@ -37,7 +37,7 @@
 
   var DISCOVERY_DOC = "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest";
   var SCOPES = "https://www.googleapis.com/auth/drive.file";
-  var FOLDER_NAME = "ChordproJS";
+  var DEFAULT_FOLDER_NAME = "ChordProJS";
   var MANIFEST_FILE = "manifest.json";
   var STATE_FILE = "state.json";
 
@@ -46,18 +46,23 @@
    * @param {object} options
    * @param {string} [options.clientId] - OAuth2 Client ID (overrides DEFAULT_CLIENT_ID)
    * @param {string} [options.apiKey]   - API Key (overrides DEFAULT_API_KEY)
+   * @param {string} [options.folderId] - Google Drive folder ID
+   * @param {string} [options.folderName] - Google Drive folder name
    */
   function GoogleDriveProvider(options) {
     options = options || {};
     this.clientId = options.clientId || DEFAULT_CLIENT_ID;
     this.apiKey = options.apiKey || DEFAULT_API_KEY;
+    this.folderId = options.folderId || null;
+    this.folderName = options.folderName || DEFAULT_FOLDER_NAME;
 
     this._gapiReady = false;
     this._gisReady = false;
+    this._pickerReady = false;
     this._initPromise = null;
     this._tokenClient = null;
     this._accessToken = null;
-    this._folderId = null;
+    this._cachedFolderId = this.folderId;
   }
 
   // ---------------------------------------------------------------------------
@@ -96,21 +101,29 @@
             reject(new Error("GoogleDriveProvider: window.gapi not found after script load."));
             return;
           }
-          window.gapi.load("client", {
+          /* eslint-disable-next-line no-console */
+          console.log("GoogleDriveProvider: gapi script loaded, loading client and picker...");
+          window.gapi.load("client:picker", {
             callback: function () {
               if (!window.gapi.client) {
                 reject(new Error("GoogleDriveProvider: window.gapi.client not found after gapi.load."));
                 return;
               }
+              self._pickerReady = true;
               var initOptions = {
                 discoveryDocs: [DISCOVERY_DOC]
               };
-              if (self.apiKey && self.apiKey !== "YOUR_API_KEY") {
+
+              // Only include API Key if it's not the placeholder and not empty
+              if (self.apiKey && self.apiKey !== "YOUR_API_KEY" && self.apiKey.trim() !== "") {
                 initOptions.apiKey = self.apiKey;
               }
+
               window.gapi.client
                 .init(initOptions)
                 .then(function () {
+                  /* eslint-disable-next-line no-console */
+                  console.log("GoogleDriveProvider: gapi client initialized.");
                   self._gapiReady = true;
                   resolve();
                 })
@@ -119,14 +132,14 @@
 
                   // Check if it's an API key error
                   if (msg.indexOf("API_KEY_INVALID") !== -1 || msg.indexOf("API key not valid") !== -1) {
-                    msg = "Invalid API key. Ensure you have replaced 'YOUR_API_KEY' in 'plugins/google-drive-provider.js' or passed a valid apiKey to the constructor. See: https://console.cloud.google.com/apis/credentials";
+                    msg = "Invalid API key. See: https://console.cloud.google.com/apis/credentials";
                   }
 
                   reject(new Error("GoogleDriveProvider: gapi.client.init failed: " + msg));
                 });
             },
             onerror: function (err) {
-              reject(new Error("GoogleDriveProvider: gapi.load('client') failed: " + (err || "unknown error")));
+              reject(new Error("GoogleDriveProvider: gapi.load failed: " + (err || "unknown error")));
             }
           });
         });
@@ -138,20 +151,29 @@
             reject(new Error("GoogleDriveProvider: window.google.accounts.oauth2 not found after script load."));
             return;
           }
-          try {
-            self._tokenClient = window.google.accounts.oauth2.initTokenClient({
-              client_id: self.clientId,
-              scope: SCOPES,
-              callback: function (tokenResponse) {
-                if (tokenResponse && tokenResponse.access_token) {
-                  self._accessToken = tokenResponse.access_token;
+
+          // Only initialize token client if we have a potentially valid Client ID
+          if (self.clientId && self.clientId !== "YOUR_CLIENT_ID.apps.googleusercontent.com" && self.clientId.trim() !== "") {
+            try {
+              self._tokenClient = window.google.accounts.oauth2.initTokenClient({
+                client_id: self.clientId,
+                scope: SCOPES,
+                callback: function (tokenResponse) {
+                  if (tokenResponse && tokenResponse.access_token) {
+                    self._accessToken = tokenResponse.access_token;
+                  }
                 }
-              }
-            });
+              });
+              self._gisReady = true;
+              resolve();
+            } catch (err) {
+              reject(new Error("GoogleDriveProvider: initTokenClient failed: " + (err.message || "unknown error")));
+            }
+          } else {
+            // We can't init the token client yet, but the script is loaded.
+            // We'll mark GIS as ready but tokenClient as null.
             self._gisReady = true;
             resolve();
-          } catch (err) {
-            reject(new Error("GoogleDriveProvider: initTokenClient failed: " + (err.message || "unknown error")));
           }
         });
       })
@@ -179,11 +201,23 @@
       });
     }
 
+    if (!self._tokenClient) {
+      var errNoClient = new Error("GoogleDriveProvider: Cannot login because Client ID is missing or invalid. Please provide a valid Google OAuth2 Client ID in the settings.");
+      return Promise.reject(errNoClient);
+    }
+
     return new Promise(function (resolve, reject) {
+      var timeout = setTimeout(function () {
+        reject(new Error("GoogleDriveProvider: Login timed out. Please check if the popup was blocked or closed."));
+      }, 60000); // 60s timeout
+
       // Override the callback to resolve the promise
       self._tokenClient.callback = function (tokenResponse) {
+        clearTimeout(timeout);
+        /* eslint-disable-next-line no-console */
+        console.log("GoogleDriveProvider: GIS callback received.", tokenResponse);
         if (tokenResponse.error) {
-          reject(new Error("OAuth error: " + tokenResponse.error));
+          reject(new Error("OAuth error: " + tokenResponse.error + (tokenResponse.error_description ? " - " + tokenResponse.error_description : "")));
           return;
         }
         self._accessToken = tokenResponse.access_token;
@@ -191,13 +225,33 @@
         resolve(self._accessToken);
       };
 
+      /* eslint-disable-next-line no-console */
+      console.log("GoogleDriveProvider: Requesting access token...");
       // If we already have a token, try a silent refresh first; otherwise popup
+      // Use 'select_account' instead of 'consent' to avoid forcing approval every time
       if (self._accessToken) {
         self._tokenClient.requestAccessToken({ prompt: "" });
       } else {
-        self._tokenClient.requestAccessToken({ prompt: "consent" });
+        self._tokenClient.requestAccessToken({ prompt: "select_account" });
       }
     });
+  };
+
+  /**
+   * Revoke the current access token.
+   */
+  GoogleDriveProvider.prototype.logout = function () {
+    if (this._accessToken) {
+      try {
+        window.google.accounts.oauth2.revoke(this._accessToken);
+      } catch (e) {
+        console.warn("GoogleDriveProvider: Failed to revoke token:", e);
+      }
+      this._accessToken = null;
+      if (window.gapi && window.gapi.client) {
+        window.gapi.client.setToken(null);
+      }
+    }
   };
 
   /**
@@ -354,7 +408,7 @@
   // ---------------------------------------------------------------------------
 
   /**
-   * Ensure the ChordproJS folder exists on Drive, creating it if needed.
+   * Ensure the folder exists on Drive, creating it if needed.
    * Caches the folder ID for subsequent calls.
    *
    * @returns {Promise<string>} Folder ID
@@ -362,13 +416,13 @@
   GoogleDriveProvider.prototype._ensureFolder = function () {
     var self = this;
 
-    if (self._folderId) {
-      return Promise.resolve(self._folderId);
+    if (self._cachedFolderId) {
+      return Promise.resolve(self._cachedFolderId);
     }
 
     var query =
       "mimeType='application/vnd.google-apps.folder'" +
-      " and name='" + FOLDER_NAME + "'" +
+      " and name='" + self.folderName + "'" +
       " and trashed=false";
 
     return window.gapi.client.drive.files
@@ -376,22 +430,22 @@
       .then(function (response) {
         var files = response.result.files;
         if (files && files.length > 0) {
-          self._folderId = files[0].id;
-          return self._folderId;
+          self._cachedFolderId = files[0].id;
+          return self._cachedFolderId;
         }
 
         // Create the folder
         return window.gapi.client.drive.files
           .create({
             resource: {
-              name: FOLDER_NAME,
+              name: self.folderName,
               mimeType: "application/vnd.google-apps.folder"
             },
             fields: "id"
           })
           .then(function (response) {
-            self._folderId = response.result.id;
-            return self._folderId;
+            self._cachedFolderId = response.result.id;
+            return self._cachedFolderId;
           });
       });
   };
@@ -528,6 +582,61 @@
       .then(function (response) {
         return response.result;
       });
+  };
+
+  /**
+   * Open the Google Picker to let the user select a folder.
+   * @returns {Promise<{id: string, name: string}>}
+   */
+  GoogleDriveProvider.prototype.pickFolder = function () {
+    var self = this;
+
+    if (!self._pickerReady || !self._accessToken) {
+      return self.login().then(function () {
+        return self.pickFolder();
+      });
+    }
+
+    return new Promise(function (resolve, reject) {
+      if (!window.google || !window.google.picker) {
+        reject(new Error("GoogleDriveProvider: Google Picker API not loaded."));
+        return;
+      }
+
+      var timeout = setTimeout(function () {
+        reject(new Error("GoogleDriveProvider: Picker timed out."));
+      }, 120000); // 120s timeout for picking
+
+      var view = new window.google.picker.DocsView(window.google.picker.ViewId.FOLDERS)
+        .setMimeTypes("application/vnd.google-apps.folder")
+        .setSelectFolderEnabled(true);
+
+      var pickerBuilder = new window.google.picker.PickerBuilder()
+        .addView(view)
+        .setOAuthToken(self._accessToken)
+        .setCallback(function (data) {
+          /* eslint-disable-next-line no-console */
+          console.log("GoogleDriveProvider: Picker callback action:", data.action);
+          if (data.action === window.google.picker.Action.PICKED) {
+            clearTimeout(timeout);
+            var doc = data.docs[0];
+            self.folderId = doc.id;
+            self.folderName = doc.name;
+            self._cachedFolderId = doc.id;
+            resolve({ id: doc.id, name: doc.name });
+          } else if (data.action === window.google.picker.Action.CANCEL) {
+            clearTimeout(timeout);
+            reject(new Error("Picker cancelled"));
+          }
+        });
+
+      if (self.apiKey && self.apiKey !== "YOUR_API_KEY") {
+        pickerBuilder.setDeveloperKey(self.apiKey);
+      }
+
+      var picker = pickerBuilder.build();
+      picker.setVisible(true);
+    });
   };
 
   /**

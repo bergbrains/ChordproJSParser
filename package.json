@@ -6,6 +6,7 @@
   "main": "dist/chordprojs.min.js",
   "module": "dist/chordprojs.esm.js",
   "types": "dist/types/index.d.ts",
+  "dev": "next dev -p 4000",
   "files": [
     "dist",
     "LICENSE"
@@ -14,7 +15,7 @@
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "lint": "eslint src",
-    "serve": "npx serve .",
+    "serve": "npx serve -l 3000 .",
     "prepare": "npm run build",
     "prepublishOnly": "npm run test && npm run build",
     "test": "jest"
@@ -30,18 +31,21 @@
   "license": "MIT",
   "devDependencies": {
     "@babel/preset-env": "7.29.0",
-    "@eslint/js": "9.39.4",
+    "@eslint/js": "10.0.1",
     "@rollup/plugin-commonjs": "29.0.2",
     "@rollup/plugin-node-resolve": "16.0.3",
     "@rollup/plugin-terser": "1.0.0",
     "babel-jest": "30.3.0",
     "baseline-browser-mapping": "2.10.8",
-    "eslint": "9.39.4",
+    "eslint": "10.1.0",
     "eslint-config-prettier": "10.1.8",
+    "globals": "^15.0.0",
     "jest": "30.3.0",
     "jest-environment-jsdom": "30.3.0",
     "rollup": "4.59.0",
+    "rollup-plugin-livereload": "^2.0.5",
     "rollup-plugin-postcss": "4.0.2",
+    "rollup-plugin-serve": "^3.0.0",
     "typescript": "5.9.3"
   },
   "dependencies": {

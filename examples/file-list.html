@@ -586,6 +586,7 @@
                 </svg>
                 <span id="drive-login-label">Sign in</span>
             </button>
+            <button id="drive-logout-btn" style="display:none; padding: 4px 8px; font-size: 0.8rem; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 5px;">Sign out</button>
         </div>
     </div>
     <div class="header-buttons">
@@ -675,11 +676,34 @@
             <div class="form-group">
                 <label for="client-id-input">Google Client ID</label>
                 <input type="text" id="client-id-input" placeholder="Enter Client ID">
+                <p style="font-size: 0.75rem; color: #666; margin-top: 4px;">
+                    Required for Google Drive login. Create one in the <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color: teal;">Google Cloud Console</a>.
+                </p>
             </div>
             <div class="form-group">
                 <label for="api-key-input">Google API Key (Optional)</label>
                 <input type="text" id="api-key-input" placeholder="Enter API Key">
             </div>
+            <div class="form-group">
+                <label for="folder-id-input">Google Drive Folder ID (Optional)</label>
+                <input type="text" id="folder-id-input" placeholder="Folder ID (leave empty for default)">
+                <p style="font-size: 0.75rem; color: #666; margin-top: 4px;">
+                    The unique ID of the folder on Google Drive.
+                </p>
+            </div>
+            <div class="form-group">
+                <label for="folder-name-input">Google Drive Folder Name</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="text" id="folder-name-input" placeholder="ChordProJS" style="flex: 1;">
+                    <button id="choose-folder-btn" style="padding: 8px 12px; font-size: 0.8rem; cursor: pointer; white-space: nowrap;">Pick Folder</button>
+                </div>
+                <p style="font-size: 0.75rem; color: #666; margin-top: 4px;">
+                    The name of the folder where your songs are stored.
+                </p>
+            </div>
+            <p style="font-size: 0.75rem; color: #666; font-style: italic;">
+                Note: For security, this app only accesses files it creates ("drive.file" scope).
+            </p>
         </div>
         <div class="modal-footer">
             <button id="reset-prefs-btn" class="secondary-btn">Reset Defaults</button>
@@ -728,6 +752,9 @@
         const autoLoadCheckbox = document.getElementById('auto-load-checkbox');
         const clientIdInput = document.getElementById('client-id-input');
         const apiKeyInput = document.getElementById('api-key-input');
+        const folderIdInput = document.getElementById('folder-id-input');
+        const folderNameInput = document.getElementById('folder-name-input');
+        const chooseFolderBtn = document.getElementById('choose-folder-btn');
 
         function openPreferences() {
             preferencesModal.style.display = 'block';
@@ -895,6 +922,7 @@
         const driveStatusText = document.getElementById('drive-status-text');
         const driveLoginBtn = document.getElementById('drive-login-btn');
         const driveLoginLabel = document.getElementById('drive-login-label');
+        const driveLogoutBtn = document.getElementById('drive-logout-btn');
 
         function setActiveProviderUI(provider) {
             if (provider === 'local') {
@@ -913,10 +941,12 @@
                 driveDot.classList.add('connected');
                 driveStatusText.textContent = 'Connected';
                 driveLoginLabel.textContent = 'Switch account';
+                driveLogoutBtn.style.display = 'inline-block';
             } else {
                 driveDot.classList.remove('connected');
                 driveStatusText.textContent = 'Not signed in';
                 driveLoginLabel.textContent = 'Sign in';
+                driveLogoutBtn.style.display = 'none';
             }
         }
 
@@ -948,7 +978,7 @@
 
             if (!driveProvider) {
                 if (typeof GoogleDriveProvider === 'undefined') {
-                    alert('GoogleDriveProvider script not loaded.');
+                    selectedFiles.innerHTML = '<p style="color:red">Error: GoogleDriveProvider script not loaded.</p>';
                     activeProvider = 'local';
                     setActiveProviderUI('local');
                     return;
@@ -962,41 +992,29 @@
 
             // Init GAPI/GIS if not already done
             try {
+                selectedFiles.innerHTML = '<p>Initializing Google Drive…</p>';
                 await driveProvider.init();
+
+                // Check if we are authenticated
+                if (driveProvider.isAuthenticated()) {
+                    updateDriveStatusUI(true);
+                    await loadDriveSongs();
+                } else {
+                    updateDriveStatusUI(false);
+                    selectedFiles.innerHTML = '<p>Please <strong>Sign in</strong> to access your Google Drive songs.</p>';
+                }
             } catch (err) {
                 console.error('Drive init error:', err);
                 const msg = err.message || (typeof err === 'string' ? err : JSON.stringify(err));
 
-                // If missing credentials, open config
-                if (msg.includes('Missing credentials')) {
-                    if (confirm('Google Drive credentials not set. Would you like to configure them now?')) {
-                        openPreferences();
-                    }
+                if (msg.includes('protocol') && msg.includes('file:')) {
+                    selectedFiles.innerHTML = `<p style="color:red"><strong>Error:</strong> Google Drive cannot be used from a <code>file://</code> URL. Please use a web server (e.g., <code>npm run serve</code>).</p>`;
                 } else {
-                    alert('Failed to initialize Google Drive client: ' + msg);
+                    selectedFiles.innerHTML = `<p style="color:orange">Google Drive is ready but needs configuration. Click <strong>Sign in</strong> or go to <strong>Preferences</strong>.</p>`;
                 }
 
-                activeProvider = 'local';
-                setActiveProviderUI('local');
-                return;
+                updateDriveStatusUI(false);
             }
-
-            // If not yet authenticated, trigger login
-            if (!driveProvider.isAuthenticated()) {
-                try {
-                    await driveProvider.login();
-                } catch (err) {
-                    console.error('Drive login error:', err);
-                    const msg = err.message || (typeof err === 'string' ? err : JSON.stringify(err));
-                    alert('Google Drive sign-in failed: ' + msg);
-                    activeProvider = 'local';
-                    setActiveProviderUI('local');
-                    return;
-                }
-            }
-
-            updateDriveStatusUI(driveProvider.isAuthenticated());
-            await loadDriveSongs();
         });
 
         driveLoginBtn.addEventListener('click', async () => {
@@ -1006,6 +1024,8 @@
                 const prefs = getPreferences();
                 if (prefs.googleClientId) options.clientId = prefs.googleClientId;
                 if (prefs.googleApiKey) options.apiKey = prefs.googleApiKey;
+                if (prefs.googleFolderId) options.folderId = prefs.googleFolderId;
+                if (prefs.googleFolderName) options.folderName = prefs.googleFolderName;
                 driveProvider = new GoogleDriveProvider(options);
             }
             try {
@@ -1018,13 +1038,21 @@
                 const msg = err.message || (typeof err === 'string' ? err : JSON.stringify(err));
 
                 // If missing credentials, open config
-                if (msg.includes('Missing credentials')) {
-                    if (confirm('Google Drive credentials not set. Would you like to configure them now?')) {
+                if (msg.includes('Missing credentials') || msg.includes('Client ID is missing')) {
+                    if (confirm('Google Drive Client ID is not set. Would you like to configure it now in Preferences?')) {
                         openPreferences();
                     }
                 } else {
                     alert('Google Drive sign-in failed: ' + msg);
                 }
+            }
+        });
+
+        driveLogoutBtn.addEventListener('click', () => {
+            if (driveProvider) {
+                driveProvider.logout();
+                updateDriveStatusUI(false);
+                selectedFiles.innerHTML = '<p>Signed out of Google Drive.</p>';
             }
         });
 
@@ -1213,6 +1241,8 @@
                     autoLoadLastSong: autoLoadCheckbox.checked,
                     googleClientId: clientIdInput.value,
                     googleApiKey: apiKeyInput.value,
+                    googleFolderId: folderIdInput.value,
+                    googleFolderName: folderNameInput.value,
                     zoomLevel: currentZoom // Persist current zoom level too
                 };
                 savePreferences(newPrefs);
@@ -1223,7 +1253,7 @@
                 // Re-initialize drive provider if we were using it
                 if (activeProvider === 'drive') {
                     driveProvider = null; // Force new instance with new credentials
-                    useDriveBtn.click();
+                    if (useDriveBtn) useDriveBtn.click();
                 }
             });
 
@@ -1279,7 +1309,42 @@
                 autoLoadCheckbox.checked = prefs.autoLoadLastSong;
                 clientIdInput.value = prefs.googleClientId || '';
                 apiKeyInput.value = prefs.googleApiKey || '';
+                folderIdInput.value = prefs.googleFolderId || '';
+                folderNameInput.value = prefs.googleFolderName || 'ChordProJS';
             }
+
+            // Choose folder button logic
+            chooseFolderBtn.addEventListener('click', async () => {
+                if (!clientIdInput.value) {
+                    alert('Please enter a Google Client ID first.');
+                    return;
+                }
+
+                // Initialize temporary provider for picking if needed
+                let pickerProvider = driveProvider;
+                if (!pickerProvider) {
+                    pickerProvider = new GoogleDriveProvider({
+                        clientId: clientIdInput.value,
+                        apiKey: apiKeyInput.value
+                    });
+                }
+
+                try {
+                    chooseFolderBtn.textContent = 'Opening…';
+                    chooseFolderBtn.disabled = true;
+                    const folder = await pickerProvider.pickFolder();
+                    folderIdInput.value = folder.id;
+                    folderNameInput.value = folder.name;
+                } catch (err) {
+                    console.error('Folder pick error:', err);
+                    if (err.message !== 'Picker cancelled') {
+                        alert('Error choosing folder: ' + err.message);
+                    }
+                } finally {
+                    chooseFolderBtn.textContent = 'Pick Folder';
+                    chooseFolderBtn.disabled = false;
+                }
+            });
 
             // Apply theme
             function updateTheme() {
