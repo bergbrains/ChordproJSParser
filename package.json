@@ -30,6 +30,7 @@
   "author": "Eric Berg <eberg@bergbrains.com>",
   "license": "MIT",
   "devDependencies": {
+    "globals": "^16.0.0",
     "@babel/preset-env": "7.29.0",
     "@eslint/js": "10.0.1",
     "@rollup/plugin-commonjs": "29.0.2",
@@ -39,7 +40,6 @@
     "baseline-browser-mapping": "2.10.8",
     "eslint": "10.1.0",
     "eslint-config-prettier": "10.1.8",
-    "globals": "^15.0.0",
     "jest": "30.3.0",
     "jest-environment-jsdom": "30.3.0",
     "rollup": "4.59.0",
