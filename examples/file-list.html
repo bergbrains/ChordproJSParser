@@ -1276,9 +1276,10 @@
                         if (useDriveBtn) useDriveBtn.click();
                     } else if (driveProvider) {
                         // Update folder settings in-place without re-auth.
-                        driveProvider.folderId = newPrefs.googleFolderId || null;
-                        driveProvider.folderName = newPrefs.googleFolderName || 'ChordProJS';
-                        driveProvider._cachedFolderId = newPrefs.googleFolderId || null;
+                        driveProvider.updateFolderSettings(
+                            newPrefs.googleFolderId || null,
+                            newPrefs.googleFolderName || 'ChordProJS'
+                        );
                         loadDriveSongs();
                     }
                 }

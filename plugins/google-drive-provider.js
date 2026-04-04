@@ -234,7 +234,7 @@
       console.log("GoogleDriveProvider: Requesting access token...");
       // Default to silent/minimal prompt ('') to avoid unnecessary re-auth.
       // Callers can pass { prompt: 'select_account' } to force account selection.
-      var prompt = (options.prompt !== undefined) ? options.prompt : (self._accessToken ? "" : "");
+      var prompt = (options.prompt !== undefined) ? options.prompt : "";
       self._tokenClient.requestAccessToken({ prompt: prompt });
     });
   };
@@ -388,6 +388,24 @@
         });
       });
     });
+  };
+
+  // ---------------------------------------------------------------------------
+  // Folder configuration
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Update the target folder without requiring re-authentication.
+   * The previously-cached folder ID is cleared so the next operation resolves
+   * (and if necessary creates) the new folder.
+   *
+   * @param {string|null} folderId   - Known Drive folder ID, or null to resolve by name.
+   * @param {string}      folderName - Human-readable folder name used when folderId is null.
+   */
+  GoogleDriveProvider.prototype.updateFolderSettings = function (folderId, folderName) {
+    this.folderId = folderId || null;
+    this.folderName = folderName || DEFAULT_FOLDER_NAME;
+    this._cachedFolderId = folderId || null;
   };
 
   // ---------------------------------------------------------------------------
