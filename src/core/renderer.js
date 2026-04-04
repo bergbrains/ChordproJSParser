@@ -1,12 +1,11 @@
 // src/core/renderer.js
-/* global document */
 /**
  * Render parsed ChordPro data to an HTML element in the DOM
- * 
+ *
  * This function takes structured song data from the parser and injects it
  * into a DOM element. It's the primary method for displaying ChordPro content
  * in web applications.
- * 
+ *
  * @param {object} parsedData - Data returned from parseChordPro function
  * @param {HTMLElement|string} element - Target DOM element or CSS selector string
  * @param {object} [options={}] - Rendering options to control output appearance
@@ -17,7 +16,7 @@
  * @param {function} [options.transposeChords] - Optional function to transpose chords
  * @returns {HTMLElement} The rendered element containing the song HTML
  * @throws {Error} If the target element cannot be found
- * 
+ *
  * @example
  * const parsed = parseChordPro(chordproText);
  * renderToElement(parsed, '#song-container', { showChords: true });
@@ -37,11 +36,11 @@ export function renderToElement(parsedData, element, options = {}) {
 
 /**
  * Render parsed ChordPro data to an HTML string
- * 
+ *
  * This function converts structured song data into HTML markup. Unlike renderToElement,
  * this returns a string rather than modifying the DOM, making it useful for server-side
  * rendering, email templates, or programmatic HTML generation.
- * 
+ *
  * @param {object} parsedData - Data returned from parseChordPro function
  * @param {object} [options={}] - Rendering options to control output appearance
  * @param {boolean} [options.showTitle=true] - Whether to include song title in output
@@ -50,7 +49,7 @@ export function renderToElement(parsedData, element, options = {}) {
  * @param {boolean} [options.showComments=true] - Whether to include comment lines
  * @param {function} [options.transposeChords] - Optional function to transpose chords
  * @returns {string} HTML representation of the song
- * 
+ *
  * @example
  * const parsed = parseChordPro('{title: My Song}\n[C]Hello world');
  * const html = renderToHTML(parsed);
@@ -293,14 +292,14 @@ export function renderToHTML(parsedData, options = {}) {
 
 /**
  * Escape HTML special characters to prevent XSS attacks
- * 
+ *
  * This is a critical security function that sanitizes user input before
  * rendering it as HTML. All text content from ChordPro files must be
  * escaped to prevent malicious code injection.
- * 
+ *
  * @param {string} text - Text to escape
  * @returns {string} Escaped text safe for HTML rendering
- * 
+ *
  * @example
  * escapeHtml('<script>alert("xss")</script>');
  * // Returns: '&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;'

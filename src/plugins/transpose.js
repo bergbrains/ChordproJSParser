@@ -1,19 +1,18 @@
 // src/plugins/transpose.js
-/* global window */
 /**
  * Transpose Plugin for ChordproJS
- * 
+ *
  * This plugin adds chord transposition functionality to ChordproJS instances.
  * It allows chords to be shifted up or down by a specified number of semitones,
  * which is useful for matching a song to a singer's vocal range or accommodating
  * different instruments.
- * 
+ *
  * The plugin handles:
  * - Conversion between sharp (#) and flat (b) notation
  * - Preservation of chord suffixes (m, 7, maj7, sus4, etc.)
  * - Wrapping around the 12-semitone chromatic scale
  * - Integration with the {transpose: N} directive
- * 
+ *
  * @example
  * const chordpro = new ChordproJS();
  * chordpro.use('transpose');
@@ -23,11 +22,11 @@
 export const transposePlugin = {
   /**
    * Install the transpose plugin into a ChordproJS instance
-   * 
+   *
    * This method is called automatically when using chordproJS.use('transpose').
    * It adds the transpose function to the instance and extends the parse method
    * to support manual transposition.
-   * 
+   *
    * @param {ChordproJS} chordproJS - The ChordproJS instance to extend
    */
   install(chordproJS) {
@@ -52,11 +51,11 @@ export const transposePlugin = {
     // Define transpose function
     /**
      * Transpose a single chord by a specified number of semitones
-     * 
+     *
      * @param {string} chordString - The chord to transpose (e.g., "C", "Dm7", "Bb")
      * @param {number} semitones - Number of semitones to transpose (positive = up, negative = down)
      * @returns {string} The transposed chord
-     * 
+     *
      * @example
      * transposeChord('C', 2);   // Returns 'D'
      * transposeChord('Am', 3);  // Returns 'Cm'
