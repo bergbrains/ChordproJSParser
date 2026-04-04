@@ -51,6 +51,8 @@ describe("PreferencesService", () => {
       autoLoadLastSong: true,
       googleClientId: "",
       googleApiKey: "",
+      googleFolderId: "",
+      googleFolderName: "ChordProJS",
     });
   });
 
@@ -63,6 +65,8 @@ describe("PreferencesService", () => {
       autoLoadLastSong: false,
       googleClientId: "test-client-id",
       googleApiKey: "test-api-key",
+      googleFolderId: "",
+      googleFolderName: "ChordProJS",
     };
 
     savePreferences(newPrefs);
