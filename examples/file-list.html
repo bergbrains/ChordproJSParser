@@ -712,6 +712,29 @@
     </div>
 </div>
 
+<!-- Folder Browser Modal -->
+<div id="folder-browser-modal" class="modal">
+    <div class="modal-content" style="max-width: 600px; width: 90%;">
+        <div class="modal-header">
+            <h2>Select a Folder</h2>
+            <span class="close-modal" id="close-folder-browser">&times;</span>
+        </div>
+        <div class="modal-body">
+            <nav id="folder-breadcrumb" aria-label="Folder path"
+                 style="padding: 6px 0 10px; font-size: 0.85rem; word-break: break-all; color: #555;"></nav>
+            <div id="folder-browser-list"
+                 style="border: 1px solid #ddd; border-radius: 4px;
+                        min-height: 180px; max-height: 360px; overflow-y: auto;">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="cancel-folder-browser-btn" class="btn-secondary"
+                    style="background-color: #6c757d; color: white; border: none;">Cancel</button>
+            <button id="select-folder-here-btn">Select This Folder</button>
+        </div>
+    </div>
+</div>
+
     <script src="../dist/chordprojs.min.js"></script>
     <script src="../plugins/google-drive-provider.js"></script>
 <script>
@@ -1341,17 +1364,132 @@
                 folderNameInput.value = prefs.googleFolderName || 'ChordProJS';
             }
 
-            // Choose folder button logic
+            // ---------------------------------------------------------------------------
+            // Custom folder browser (replaces the Google Picker for folder selection)
+            // ---------------------------------------------------------------------------
+            let folderBrowserStack = []; // [{id, name}, …]  — breadcrumb history
+            let folderBrowserProvider = null;
+
+            function escapeHtml(str) {
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+            }
+
+            async function renderFolderBrowserLevel() {
+                const current = folderBrowserStack[folderBrowserStack.length - 1];
+
+                // Render breadcrumb
+                const breadcrumbEl = document.getElementById('folder-breadcrumb');
+                breadcrumbEl.innerHTML = folderBrowserStack.map((f, i) => {
+                    const label = escapeHtml(f.name);
+                    if (i === folderBrowserStack.length - 1) {
+                        return `<strong>${label}</strong>`;
+                    }
+                    return `<a href="#" data-stack-idx="${i}"
+                               style="color: teal; text-decoration: none;">${label}</a>`;
+                }).join(' › ');
+
+                breadcrumbEl.querySelectorAll('a[data-stack-idx]').forEach(a => {
+                    a.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        const idx = parseInt(a.dataset.stackIdx);
+                        folderBrowserStack = folderBrowserStack.slice(0, idx + 1);
+                        await renderFolderBrowserLevel();
+                    });
+                });
+
+                // Render folder list
+                const listEl = document.getElementById('folder-browser-list');
+                listEl.innerHTML =
+                    '<p style="padding: 12px; color: #888; text-align: center;">Loading…</p>';
+
+                try {
+                    const folders = await folderBrowserProvider.listFolders(current.id);
+                    if (folders.length === 0) {
+                        listEl.innerHTML =
+                            '<p style="padding: 12px; color: #888; text-align: center;">' +
+                            'No sub-folders here. Click <strong>Select This Folder</strong> ' +
+                            'to use the current location.</p>';
+                    } else {
+                        listEl.innerHTML = '';
+                        folders.forEach(f => {
+                            const item = document.createElement('div');
+                            item.style.cssText =
+                                'padding: 10px 14px; border-bottom: 1px solid #eee; ' +
+                                'cursor: pointer; display: flex; align-items: center; ' +
+                                'gap: 10px; user-select: none;';
+                            item.innerHTML =
+                                `<span aria-hidden="true">📁</span>` +
+                                `<span>${escapeHtml(f.name)}</span>`;
+                            item.addEventListener('mouseenter', () => {
+                                item.style.backgroundColor = '#f0f0f0';
+                            });
+                            item.addEventListener('mouseleave', () => {
+                                item.style.backgroundColor = '';
+                            });
+                            item.addEventListener('click', async () => {
+                                folderBrowserStack.push({ id: f.id, name: f.name });
+                                await renderFolderBrowserLevel();
+                            });
+                            listEl.appendChild(item);
+                        });
+                    }
+                } catch (err) {
+                    listEl.innerHTML =
+                        `<p style="padding: 12px; color: red;">Error: ${escapeHtml(err.message)}</p>`;
+                }
+            }
+
+            async function openFolderBrowser(provider) {
+                folderBrowserProvider = provider;
+                folderBrowserStack = [{ id: 'root', name: 'My Drive' }];
+                document.getElementById('folder-browser-modal').style.display = 'block';
+                await renderFolderBrowserLevel();
+            }
+
+            document.getElementById('close-folder-browser').addEventListener('click', () => {
+                document.getElementById('folder-browser-modal').style.display = 'none';
+            });
+
+            document.getElementById('cancel-folder-browser-btn').addEventListener('click', () => {
+                document.getElementById('folder-browser-modal').style.display = 'none';
+            });
+
+            document.getElementById('select-folder-here-btn').addEventListener('click', () => {
+                const selected = folderBrowserStack[folderBrowserStack.length - 1];
+                // Store the Drive folder ID for fast lookup (bypasses path traversal)
+                folderIdInput.value = selected.id === 'root' ? '' : selected.id;
+                // Build a human-readable path (skip "My Drive" root entry)
+                const pathSegments = folderBrowserStack.slice(1).map(f => f.name);
+                folderNameInput.value = pathSegments.length > 0
+                    ? pathSegments.join('/')
+                    : (selected.id === 'root' ? 'ChordProJS' : selected.name);
+                document.getElementById('folder-browser-modal').style.display = 'none';
+            });
+
+            // Close folder browser when clicking outside its modal content
+            window.addEventListener('click', (event) => {
+                const modal = document.getElementById('folder-browser-modal');
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            // Choose folder button — opens the custom folder browser
             chooseFolderBtn.addEventListener('click', async () => {
                 if (!clientIdInput.value) {
                     alert('Please enter a Google Client ID first.');
                     return;
                 }
 
-                // Initialize temporary provider for picking if needed
-                let pickerProvider = driveProvider;
-                if (!pickerProvider) {
-                    pickerProvider = new GoogleDriveProvider({
+                // Re-use the authenticated driveProvider when available; otherwise
+                // create a temporary one scoped to the credentials entered so far.
+                let browserProvider = driveProvider;
+                if (!browserProvider) {
+                    browserProvider = new GoogleDriveProvider({
                         clientId: clientIdInput.value,
                         apiKey: apiKeyInput.value
                     });
@@ -1360,14 +1498,14 @@
                 try {
                     chooseFolderBtn.textContent = 'Opening…';
                     chooseFolderBtn.disabled = true;
-                    const folder = await pickerProvider.pickFolder();
-                    folderIdInput.value = folder.id;
-                    folderNameInput.value = folder.name;
-                } catch (err) {
-                    console.error('Folder pick error:', err);
-                    if (err.message !== 'Picker cancelled') {
-                        alert('Error choosing folder: ' + err.message);
+                    await browserProvider.init();
+                    if (!browserProvider.isAuthenticated()) {
+                        await browserProvider.login({ prompt: 'select_account' });
                     }
+                    await openFolderBrowser(browserProvider);
+                } catch (err) {
+                    console.error('Folder browser error:', err);
+                    alert('Error opening folder browser: ' + err.message);
                 } finally {
                     chooseFolderBtn.textContent = 'Pick Folder';
                     chooseFolderBtn.disabled = false;

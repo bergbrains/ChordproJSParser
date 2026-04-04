@@ -400,7 +400,7 @@
    * (and if necessary creates) the new folder.
    *
    * @param {string|null} folderId   - Known Drive folder ID, or null to resolve by name.
-   * @param {string}      folderName - Human-readable folder name used when folderId is null.
+   * @param {string}      folderName - Human-readable folder name (may contain '/' path separators).
    */
   GoogleDriveProvider.prototype.updateFolderSettings = function (folderId, folderName) {
     this.folderId = folderId || null;
@@ -408,15 +408,48 @@
     this._cachedFolderId = folderId || null;
   };
 
+  /**
+   * List immediate sub-folders of a given parent folder.
+   * Used by external UI to build a hierarchical folder browser.
+   *
+   * @param {string} [parentId] - Drive folder ID, e.g. "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs"
+   *   (defaults to 'root' = My Drive root). Drive IDs are alphanumeric and do not
+   *   contain query-sensitive characters; the defensive escaping below guards against
+   *   unexpected values being passed.
+   * @returns {Promise<Array<{id: string, name: string}>>}
+   */
+  GoogleDriveProvider.prototype.listFolders = function (parentId) {
+    var safeParentId = (parentId || "root").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    var query =
+      "mimeType='application/vnd.google-apps.folder'" +
+      " and '" + safeParentId + "' in parents" +
+      " and trashed=false";
+
+    return window.gapi.client.drive.files
+      .list({
+        q: query,
+        fields: "files(id, name)",
+        spaces: "drive",
+        orderBy: "name",
+        pageSize: 200
+      })
+      .then(function (response) {
+        return response.result.files || [];
+      });
+  };
+
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
 
   /**
-   * Ensure the folder exists on Drive, creating it if needed.
-   * Caches the folder ID for subsequent calls.
+   * Ensure the target folder exists on Drive, creating missing segments if needed.
+   * Supports slash-delimited paths such as "Projects/Music/MySongs".
+   * Each segment is resolved (or created) under the previous segment's parent,
+   * starting from the My Drive root.
+   * Caches the final folder ID for subsequent calls.
    *
-   * @returns {Promise<string>} Folder ID
+   * @returns {Promise<string>} Folder ID of the deepest path segment
    */
   GoogleDriveProvider.prototype._ensureFolder = function () {
     var self = this;
@@ -425,34 +458,57 @@
       return Promise.resolve(self._cachedFolderId);
     }
 
-    var query =
-      "mimeType='application/vnd.google-apps.folder'" +
-      " and name='" + self.folderName + "'" +
-      " and trashed=false";
+    // Split on '/' and strip whitespace/empty segments
+    var segments = (self.folderName || DEFAULT_FOLDER_NAME)
+      .split("/")
+      .map(function (s) { return s.trim(); })
+      .filter(function (s) { return s !== ""; });
 
-    return window.gapi.client.drive.files
-      .list({ q: query, fields: "files(id, name)", spaces: "drive" })
-      .then(function (response) {
-        var files = response.result.files;
-        if (files && files.length > 0) {
-          self._cachedFolderId = files[0].id;
-          return self._cachedFolderId;
-        }
+    if (segments.length === 0) {
+      segments = [DEFAULT_FOLDER_NAME];
+    }
 
-        // Create the folder
-        return window.gapi.client.drive.files
-          .create({
-            resource: {
-              name: self.folderName,
-              mimeType: "application/vnd.google-apps.folder"
-            },
-            fields: "id"
-          })
-          .then(function (response) {
-            self._cachedFolderId = response.result.id;
-            return self._cachedFolderId;
-          });
-      });
+    // Resolve (or create) each path segment level by level
+    function traverseSegment(parentId, remaining) {
+      if (remaining.length === 0) {
+        self._cachedFolderId = parentId;
+        return Promise.resolve(parentId);
+      }
+
+      var segment = remaining[0];
+      var rest = remaining.slice(1);
+      var safeSegment = segment.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+      var query =
+        "mimeType='application/vnd.google-apps.folder'" +
+        " and name='" + safeSegment + "'" +
+        " and '" + parentId + "' in parents" +
+        " and trashed=false";
+
+      return window.gapi.client.drive.files
+        .list({ q: query, fields: "files(id, name)", spaces: "drive" })
+        .then(function (response) {
+          var files = response.result.files;
+          if (files && files.length > 0) {
+            return traverseSegment(files[0].id, rest);
+          }
+
+          // Segment not found — create it under the current parent
+          return window.gapi.client.drive.files
+            .create({
+              resource: {
+                name: segment,
+                mimeType: "application/vnd.google-apps.folder",
+                parents: [parentId]
+              },
+              fields: "id"
+            })
+            .then(function (createResponse) {
+              return traverseSegment(createResponse.result.id, rest);
+            });
+        });
+    }
+
+    return traverseSegment("root", segments);
   };
 
   /**
@@ -603,66 +659,6 @@
       .then(function (response) {
         return response.result;
       });
-  };
-
-  /**
-   * Open the Google Picker to let the user select a folder.
-   * Shows a hierarchical Drive browser filtered to folders only.
-   * @returns {Promise<{id: string, name: string}>}
-   */
-  GoogleDriveProvider.prototype.pickFolder = function () {
-    var self = this;
-
-    if (!self._pickerReady || !self._accessToken) {
-      return self.login().then(function () {
-        return self.pickFolder();
-      });
-    }
-
-    return new Promise(function (resolve, reject) {
-      if (!window.google || !window.google.picker) {
-        reject(new Error("GoogleDriveProvider: Google Picker API not loaded."));
-        return;
-      }
-
-      var timeout = setTimeout(function () {
-        reject(new Error("GoogleDriveProvider: Picker timed out."));
-      }, 120000); // 120s timeout for picking
-
-      // Use a DocsView (not ViewId.FOLDERS) so users can navigate the folder
-      // hierarchy rather than seeing a flat alphabetical list of all folders.
-      var view = new window.google.picker.DocsView()
-        .setIncludeFolders(true)
-        .setMimeTypes("application/vnd.google-apps.folder")
-        .setSelectFolderEnabled(true);
-
-      var pickerBuilder = new window.google.picker.PickerBuilder()
-        .setTitle("Select a Folder")
-        .addView(view)
-        .setOAuthToken(self._accessToken)
-        .setCallback(function (data) {
-          /* eslint-disable-next-line no-console */
-          console.log("GoogleDriveProvider: Picker callback action:", data.action);
-          if (data.action === window.google.picker.Action.PICKED) {
-            clearTimeout(timeout);
-            var doc = data.docs[0];
-            self.folderId = doc.id;
-            self.folderName = doc.name;
-            self._cachedFolderId = doc.id;
-            resolve({ id: doc.id, name: doc.name });
-          } else if (data.action === window.google.picker.Action.CANCEL) {
-            clearTimeout(timeout);
-            reject(new Error("Picker cancelled"));
-          }
-        });
-
-      if (self.apiKey && self.apiKey !== "YOUR_API_KEY") {
-        pickerBuilder.setDeveloperKey(self.apiKey);
-      }
-
-      var picker = pickerBuilder.build();
-      picker.setVisible(true);
-    });
   };
 
   /**
