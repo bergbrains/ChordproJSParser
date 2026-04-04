@@ -190,14 +190,19 @@
    * Trigger the OAuth2 Implicit Grant popup.
    * Resolves once an access token has been granted.
    *
+   * @param {object} [options]
+   * @param {string} [options.prompt] - OAuth prompt parameter. Defaults to '' (silent/minimal
+   *   prompt — no popup if the user has an active session). Pass 'select_account' to force
+   *   the account-selection UI (e.g. when the user explicitly clicks "Sign in").
    * @returns {Promise<string>} The access token
    */
-  GoogleDriveProvider.prototype.login = function () {
+  GoogleDriveProvider.prototype.login = function (options) {
     var self = this;
+    options = options || {};
 
     if (!self._gisReady || !self._gapiReady) {
       return self.init().then(function () {
-        return self.login();
+        return self.login(options);
       });
     }
 
@@ -227,13 +232,10 @@
 
       /* eslint-disable-next-line no-console */
       console.log("GoogleDriveProvider: Requesting access token...");
-      // If we already have a token, try a silent refresh first; otherwise popup
-      // Use 'select_account' instead of 'consent' to avoid forcing approval every time
-      if (self._accessToken) {
-        self._tokenClient.requestAccessToken({ prompt: "" });
-      } else {
-        self._tokenClient.requestAccessToken({ prompt: "select_account" });
-      }
+      // Default to silent/minimal prompt ('') to avoid unnecessary re-auth.
+      // Callers can pass { prompt: 'select_account' } to force account selection.
+      var prompt = (options.prompt !== undefined) ? options.prompt : (self._accessToken ? "" : "");
+      self._tokenClient.requestAccessToken({ prompt: prompt });
     });
   };
 
@@ -268,7 +270,8 @@
 
   /**
    * List songs from the ChordproJS folder on Drive.
-   * Reads manifest.json. If it doesn't exist, scans for .pro files and creates it.
+   * Always performs a live scan for .pro files so newly-added or externally-uploaded
+   * files are always visible (no stale manifest cache).
    *
    * @returns {Promise<Array<{id: string, name: string, lastModified: string}>>}
    */
@@ -276,29 +279,13 @@
     var self = this;
 
     return self._ensureFolder().then(function (folderId) {
-      return self._findFile(MANIFEST_FILE, folderId).then(function (manifestFile) {
-        if (manifestFile) {
-          return self._fetchFileContent(manifestFile.id).then(function (text) {
-            try {
-              return JSON.parse(text);
-            } catch (_e) {
-              return [];
-            }
-          });
-        }
-
-        // No manifest – scan for .pro files and build one
-        return self._listProFiles(folderId).then(function (files) {
-          var manifest = files.map(function (f) {
-            return {
-              id: f.id,
-              name: f.name,
-              lastModified: f.modifiedTime || new Date().toISOString()
-            };
-          });
-          return self._saveManifest(manifest, folderId).then(function () {
-            return manifest;
-          });
+      return self._listProFiles(folderId).then(function (files) {
+        return files.map(function (f) {
+          return {
+            id: f.id,
+            name: f.name,
+            lastModified: f.modifiedTime || new Date().toISOString()
+          };
         });
       });
     });
@@ -473,26 +460,42 @@
   };
 
   /**
-   * List all .pro files inside a folder.
+   * List all .pro files inside a folder, handling Drive API pagination automatically.
    *
    * @param {string} folderId
+   * @param {string} [pageToken] - Internal pagination cursor; callers should omit this.
    * @returns {Promise<Array<{id: string, name: string, modifiedTime: string}>>}
    */
-  GoogleDriveProvider.prototype._listProFiles = function (folderId) {
+  GoogleDriveProvider.prototype._listProFiles = function (folderId, pageToken) {
+    var self = this;
     var query =
       "'" + folderId + "' in parents" +
       " and name contains '.pro'" +
+      " and mimeType != 'application/vnd.google-apps.folder'" +
       " and trashed=false";
 
+    var params = {
+      q: query,
+      fields: "nextPageToken, files(id, name, modifiedTime)",
+      spaces: "drive",
+      pageSize: 1000
+    };
+
+    if (pageToken) {
+      params.pageToken = pageToken;
+    }
+
     return window.gapi.client.drive.files
-      .list({
-        q: query,
-        fields: "files(id, name, modifiedTime)",
-        spaces: "drive",
-        pageSize: 1000
-      })
+      .list(params)
       .then(function (response) {
-        return response.result.files || [];
+        var files = response.result.files || [];
+        var nextToken = response.result.nextPageToken;
+        if (nextToken) {
+          return self._listProFiles(folderId, nextToken).then(function (more) {
+            return files.concat(more);
+          });
+        }
+        return files;
       });
   };
 
@@ -586,6 +589,7 @@
 
   /**
    * Open the Google Picker to let the user select a folder.
+   * Shows a hierarchical Drive browser filtered to folders only.
    * @returns {Promise<{id: string, name: string}>}
    */
   GoogleDriveProvider.prototype.pickFolder = function () {
@@ -607,11 +611,15 @@
         reject(new Error("GoogleDriveProvider: Picker timed out."));
       }, 120000); // 120s timeout for picking
 
-      var view = new window.google.picker.DocsView(window.google.picker.ViewId.FOLDERS)
+      // Use a DocsView (not ViewId.FOLDERS) so users can navigate the folder
+      // hierarchy rather than seeing a flat alphabetical list of all folders.
+      var view = new window.google.picker.DocsView()
+        .setIncludeFolders(true)
         .setMimeTypes("application/vnd.google-apps.folder")
         .setSelectFolderEnabled(true);
 
       var pickerBuilder = new window.google.picker.PickerBuilder()
+        .setTitle("Select a Folder")
         .addView(view)
         .setOAuthToken(self._accessToken)
         .setCallback(function (data) {

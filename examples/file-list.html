@@ -987,6 +987,8 @@
                 const prefs = getPreferences();
                 if (prefs.googleClientId) options.clientId = prefs.googleClientId;
                 if (prefs.googleApiKey) options.apiKey = prefs.googleApiKey;
+                if (prefs.googleFolderId) options.folderId = prefs.googleFolderId;
+                if (prefs.googleFolderName) options.folderName = prefs.googleFolderName;
                 driveProvider = new GoogleDriveProvider(options);
             }
 
@@ -995,13 +997,21 @@
                 selectedFiles.innerHTML = '<p>Initializing Google Drive…</p>';
                 await driveProvider.init();
 
-                // Check if we are authenticated
                 if (driveProvider.isAuthenticated()) {
                     updateDriveStatusUI(true);
                     await loadDriveSongs();
                 } else {
-                    updateDriveStatusUI(false);
-                    selectedFiles.innerHTML = '<p>Please <strong>Sign in</strong> to access your Google Drive songs.</p>';
+                    // Attempt a silent/minimal-prompt token grant first so the user
+                    // is not forced to re-authenticate on every page load.
+                    try {
+                        await driveProvider.login();
+                        updateDriveStatusUI(true);
+                        await loadDriveSongs();
+                    } catch (_silentErr) {
+                        // Silent auth failed — show the Sign-in button instead.
+                        updateDriveStatusUI(false);
+                        selectedFiles.innerHTML = '<p>Please <strong>Sign in</strong> to access your Google Drive songs.</p>';
+                    }
                 }
             } catch (err) {
                 console.error('Drive init error:', err);
@@ -1030,7 +1040,8 @@
             }
             try {
                 await driveProvider.init();
-                await driveProvider.login();
+                // Use 'select_account' so the user can explicitly choose/switch their account.
+                await driveProvider.login({ prompt: 'select_account' });
                 updateDriveStatusUI(driveProvider.isAuthenticated());
                 await loadDriveSongs();
             } catch (err) {
@@ -1234,6 +1245,7 @@
 
             // Save preferences
             savePrefsBtn.addEventListener('click', () => {
+                const oldPrefs = getPreferences();
                 const newPrefs = {
                     theme: themeSelect.value,
                     showChords: showChordsCheckbox.checked,
@@ -1250,10 +1262,25 @@
                 applyPreferences();
                 closePreferences();
 
-                // Re-initialize drive provider if we were using it
+                // Re-initialize drive provider when using Drive.
+                // Only force a full re-auth (null the provider) when OAuth credentials
+                // changed. For folder-only changes, update the provider in-place and
+                // reload — no re-authentication needed.
                 if (activeProvider === 'drive') {
-                    driveProvider = null; // Force new instance with new credentials
-                    if (useDriveBtn) useDriveBtn.click();
+                    const credentialsChanged =
+                        oldPrefs.googleClientId !== newPrefs.googleClientId ||
+                        oldPrefs.googleApiKey !== newPrefs.googleApiKey;
+
+                    if (credentialsChanged) {
+                        driveProvider = null;
+                        if (useDriveBtn) useDriveBtn.click();
+                    } else if (driveProvider) {
+                        // Update folder settings in-place without re-auth.
+                        driveProvider.folderId = newPrefs.googleFolderId || null;
+                        driveProvider.folderName = newPrefs.googleFolderName || 'ChordProJS';
+                        driveProvider._cachedFolderId = newPrefs.googleFolderId || null;
+                        loadDriveSongs();
+                    }
                 }
             });
 
