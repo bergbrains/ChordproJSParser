@@ -45,11 +45,15 @@
     },
     {
       "groupName": "GitHub Actions",
-      "matchManagers": ["github-actions"]
+      "matchManagers": ["github-actions"],
+      "automerge": true,
+      "platformAutomerge": true
     },
     {
       "groupName": "pre-commit hooks",
-      "matchManagers": ["pre-commit"]
+      "matchManagers": ["pre-commit"],
+      "automerge": true,
+      "platformAutomerge": true
     }
   ],
   "prCreation": "immediate",
