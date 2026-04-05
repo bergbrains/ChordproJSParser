@@ -360,6 +360,329 @@
             background-color: #5a6268;
         }
 
+        /* ── Preferences modal – two-pane layout ─────────────────────────── */
+
+        /* Override the generic .modal-content sizing for the prefs dialog */
+        .prefs-modal-content {
+            max-width: 760px;
+            width: 90%;
+            margin: 5% auto;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .prefs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #f8f9fa;
+            flex-shrink: 0;
+        }
+
+        .prefs-header h2 {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            color: #222;
+        }
+
+        /* The two-pane body */
+        .prefs-body {
+            display: flex;
+            flex: 1;
+            min-height: 380px;
+            overflow: hidden;
+        }
+
+        /* ── Left navigation tree ─── */
+        .prefs-nav {
+            width: 210px;
+            flex-shrink: 0;
+            background: #f0f2f5;
+            border-right: 1px solid #e0e0e0;
+            overflow-y: auto;
+            padding: 12px 0;
+        }
+
+        .prefs-tree {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .prefs-tree-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px 7px 16px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: #444;
+            border-left: 3px solid transparent;
+            transition: background 0.15s, color 0.15s;
+            user-select: none;
+            position: relative;
+        }
+
+        .prefs-tree-item:hover {
+            background: #e4e7ec;
+            color: #111;
+        }
+
+        .prefs-tree-item.active {
+            background: #e0edf8;
+            color: #0d6ebd;
+            border-left-color: #0d6ebd;
+            font-weight: 600;
+        }
+
+        /* Folder toggle arrow */
+        .prefs-tree-toggle {
+            font-size: 0.65rem;
+            display: inline-block;
+            transition: transform 0.2s;
+            color: #888;
+            flex-shrink: 0;
+        }
+
+        .prefs-tree-item.expanded > .prefs-tree-toggle {
+            transform: rotate(90deg);
+        }
+
+        /* Tree icon (emoji) */
+        .prefs-tree-icon {
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        /* Sub-items (children) */
+        .prefs-tree-children {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: none;
+        }
+
+        .prefs-tree-children.open {
+            display: block;
+        }
+
+        .prefs-tree-children .prefs-tree-item {
+            padding-left: 34px;
+            font-size: 0.845rem;
+        }
+
+        /* ── Right content panels ─── */
+        .prefs-panels {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 28px;
+        }
+
+        .prefs-panel {
+            display: none;
+        }
+
+        .prefs-panel.active {
+            display: block;
+        }
+
+        .prefs-panel h3 {
+            margin: 0 0 20px 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #222;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .prefs-panel .form-group {
+            margin-bottom: 18px;
+        }
+
+        .prefs-panel .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #333;
+        }
+
+        .prefs-panel .form-group input[type="text"],
+        .prefs-panel .form-group input[type="number"],
+        .prefs-panel .form-group select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 0.875rem;
+            color: #222;
+            background: #fff;
+            transition: border-color 0.15s;
+        }
+
+        .prefs-panel .form-group input[type="text"]:focus,
+        .prefs-panel .form-group input[type="number"]:focus,
+        .prefs-panel .form-group select:focus {
+            outline: none;
+            border-color: #0d6ebd;
+        }
+
+        /* Checkbox rows */
+        .prefs-check-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .prefs-check-row:last-child {
+            border-bottom: none;
+        }
+
+        .prefs-check-row input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            accent-color: #0d6ebd;
+            cursor: pointer;
+        }
+
+        .prefs-check-row label {
+            font-size: 0.875rem;
+            color: #333;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .prefs-check-row label span.desc {
+            display: block;
+            font-size: 0.78rem;
+            color: #777;
+            font-weight: 400;
+            margin-top: 1px;
+        }
+
+        /* Small help text under inputs */
+        .prefs-hint {
+            font-size: 0.77rem;
+            color: #777;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .prefs-hint a {
+            color: teal;
+        }
+
+        /* Input with action button beside it */
+        .prefs-input-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .prefs-input-row input {
+            flex: 1;
+        }
+
+        .prefs-input-row button {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* Narrow inputs */
+        .prefs-input-narrow {
+            max-width: 140px !important;
+        }
+
+        /* Footer */
+        .prefs-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 14px 20px;
+            border-top: 1px solid #e0e0e0;
+            background: #f8f9fa;
+            flex-shrink: 0;
+        }
+
+        /* ── Dark theme overrides for the new prefs layout ─── */
+        body.dark-theme .prefs-header,
+        body.dark-theme .prefs-footer {
+            background: #252525;
+            border-color: #3a3a3a;
+        }
+
+        body.dark-theme .prefs-header h2 {
+            color: #e0e0e0;
+        }
+
+        body.dark-theme .prefs-nav {
+            background: #1e1e1e;
+            border-right-color: #3a3a3a;
+        }
+
+        body.dark-theme .prefs-tree-item {
+            color: #bbb;
+        }
+
+        body.dark-theme .prefs-tree-item:hover {
+            background: #2e2e2e;
+            color: #e0e0e0;
+        }
+
+        body.dark-theme .prefs-tree-item.active {
+            background: #1a3550;
+            color: #7ab8f5;
+            border-left-color: #7ab8f5;
+        }
+
+        body.dark-theme .prefs-panels {
+            background: #2a2a2a;
+        }
+
+        body.dark-theme .prefs-panel h3 {
+            color: #e0e0e0;
+            border-bottom-color: #3a3a3a;
+        }
+
+        body.dark-theme .prefs-panel .form-group label {
+            color: #ccc;
+        }
+
+        body.dark-theme .prefs-panel .form-group input[type="text"],
+        body.dark-theme .prefs-panel .form-group input[type="number"],
+        body.dark-theme .prefs-panel .form-group select {
+            background: #333;
+            border-color: #555;
+            color: #e0e0e0;
+        }
+
+        body.dark-theme .prefs-check-row {
+            border-bottom-color: #3a3a3a;
+        }
+
+        body.dark-theme .prefs-check-row label {
+            color: #ccc;
+        }
+
+        body.dark-theme .prefs-hint {
+            color: #888;
+        }
+
+        /* ──────────────────────────────────────────────────────────────────── */
+
         /* Dark Theme Support */
         body.dark-theme {
             background-color: #1e1e1e;
@@ -644,86 +967,161 @@
 
 <!-- Preferences Modal -->
 <div id="preferences-modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>User Preferences</h2>
-            <span class="close-modal">&times;</span>
+    <div class="modal-content prefs-modal-content">
+
+        <!-- Header -->
+        <div class="prefs-header">
+            <h2>Preferences</h2>
+            <span id="close-prefs-modal" class="close-modal">&times;</span>
         </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label for="theme-select">Theme</label>
-                <select id="theme-select">
-                    <option value="system">System Default</option>
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" id="show-chords-checkbox"> Show Chords
-                </label>
-            </div>
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" id="show-comments-checkbox"> Show Comments
-                </label>
-            </div>
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" id="auto-load-checkbox"> Auto-load Last Song
-                </label>
-            </div>
-            <div class="form-group">
-                <label for="client-id-input">Google Client ID</label>
-                <input type="text" id="client-id-input" placeholder="Enter Client ID">
-                <p style="font-size: 0.75rem; color: #666; margin-top: 4px;">
-                    Required for Google Drive login. Create one in the <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color: teal;">Google Cloud Console</a>.
-                </p>
-            </div>
-            <div class="form-group">
-                <label for="api-key-input">Google API Key (Optional)</label>
-                <input type="text" id="api-key-input" placeholder="Enter API Key">
-            </div>
-            <div class="form-group">
-                <label for="folder-id-input">Google Drive Folder ID (Optional)</label>
-                <input type="text" id="folder-id-input" placeholder="Folder ID (leave empty for default)">
-                <p style="font-size: 0.75rem; color: #666; margin-top: 4px;">
-                    The unique ID of the folder on Google Drive.
-                </p>
-            </div>
-            <div class="form-group">
-                <label for="folder-name-input">Google Drive Folder Name</label>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <input type="text" id="folder-name-input" placeholder="ChordProJS" style="flex: 1;">
-                    <button id="choose-folder-btn" style="padding: 8px 12px; font-size: 0.8rem; cursor: pointer; white-space: nowrap;">Pick Folder</button>
+
+        <!-- Two-pane body -->
+        <div class="prefs-body">
+
+            <!-- Left nav tree -->
+            <nav class="prefs-nav" aria-label="Preferences sections">
+                <ul class="prefs-tree">
+                    <li class="prefs-tree-item prefs-tree-leaf active"
+                        data-screen="general" tabindex="0" role="button" aria-pressed="true">
+                        <span class="prefs-tree-icon">⚙️</span> General
+                    </li>
+                    <li class="prefs-tree-item prefs-tree-folder expanded"
+                        data-folder="storage-providers" tabindex="0" role="button" aria-expanded="true">
+                        <span class="prefs-tree-toggle">▶</span>
+                        <span class="prefs-tree-icon">🗄️</span> Storage Providers
+                        <ul class="prefs-tree-children open" role="group">
+                            <li class="prefs-tree-item prefs-tree-leaf"
+                                data-screen="google-drive" tabindex="0" role="button" aria-pressed="false">
+                                <span class="prefs-tree-icon">☁️</span> Google Drive
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Right content panels -->
+            <div class="prefs-panels">
+
+                <!-- ── General panel ── -->
+                <div class="prefs-panel active" id="panel-general">
+                    <h3>General</h3>
+
+                    <div class="form-group">
+                        <label for="theme-select">Theme</label>
+                        <select id="theme-select">
+                            <option value="system">System Default</option>
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Display</label>
+                        <div class="prefs-check-row">
+                            <input type="checkbox" id="show-chords-checkbox">
+                            <label for="show-chords-checkbox">
+                                Show Chords
+                                <span class="desc">Render chord names above lyric lines</span>
+                            </label>
+                        </div>
+                        <div class="prefs-check-row">
+                            <input type="checkbox" id="show-comments-checkbox">
+                            <label for="show-comments-checkbox">
+                                Show Comments
+                                <span class="desc">Display inline comment directives</span>
+                            </label>
+                        </div>
+                        <div class="prefs-check-row">
+                            <input type="checkbox" id="auto-load-checkbox">
+                            <label for="auto-load-checkbox">
+                                Auto-load Last Song
+                                <span class="desc">Re-open the last viewed song on startup</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="general-file-extension-input">File Extension</label>
+                        <input type="text" id="general-file-extension-input"
+                               class="prefs-input-narrow" placeholder=".pro">
+                        <p class="prefs-hint">
+                            Default extension for local ChordPro files
+                            (e.g. <code>.pro</code>, <code>.cho</code>).
+                        </p>
+                    </div>
                 </div>
-                <p style="font-size: 0.75rem; color: #666; margin-top: 4px;">
-                    The name of the folder where your songs are stored.
-                </p>
-            </div>
-            <div class="form-group">
-                <label for="drive-file-extension-input">File Extension</label>
-                <input type="text" id="drive-file-extension-input" placeholder=".pro" style="max-width: 120px;">
-                <p style="font-size: 0.75rem; color: #666; margin-top: 4px;">
-                    Extension of song files to load from Drive (e.g. <code>.pro</code>, <code>.cho</code>).
-                </p>
-            </div>
-            <div class="form-group">
-                <label for="drive-poll-interval-input">Poll Interval (seconds)</label>
-                <input type="number" id="drive-poll-interval-input" min="0" max="3600" step="5" placeholder="30" style="max-width: 100px;">
-                <p style="font-size: 0.75rem; color: #666; margin-top: 4px;">
-                    How often to check Drive for file changes. Set to <strong>0</strong> to disable polling.
-                </p>
-            </div>
-            <p style="font-size: 0.75rem; color: #666; font-style: italic;">
-                Note: For security, this app only accesses files it creates ("drive.file" scope).
-            </p>
-        </div>
-        <div class="modal-footer">
-            <button id="reset-prefs-btn" class="secondary-btn">Reset Defaults</button>
+
+                <!-- ── Google Drive panel ── -->
+                <div class="prefs-panel" id="panel-google-drive">
+                    <h3>Google Drive</h3>
+
+                    <div class="form-group">
+                        <label for="client-id-input">Client ID</label>
+                        <input type="text" id="client-id-input" placeholder="Enter OAuth Client ID">
+                        <p class="prefs-hint">
+                            Required for Google Drive sign-in. Create one in the
+                            <a href="https://console.cloud.google.com/apis/credentials"
+                               target="_blank">Google Cloud Console</a>.
+                        </p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="api-key-input">API Key <span style="font-weight:400;color:#888">(optional)</span></label>
+                        <input type="text" id="api-key-input" placeholder="Enter API Key">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="folder-id-input">Folder ID <span style="font-weight:400;color:#888">(optional)</span></label>
+                        <input type="text" id="folder-id-input" placeholder="Leave empty for root">
+                        <p class="prefs-hint">The unique Drive ID of the folder containing your songs.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="folder-name-input">Folder Name</label>
+                        <div class="prefs-input-row">
+                            <input type="text" id="folder-name-input" placeholder="ChordProJS">
+                            <button id="choose-folder-btn">Pick Folder</button>
+                        </div>
+                        <p class="prefs-hint">Display name of the folder where your songs are stored.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="drive-file-extension-input">File Extension</label>
+                        <input type="text" id="drive-file-extension-input"
+                               class="prefs-input-narrow" placeholder=".pro">
+                        <p class="prefs-hint">
+                            Extension of song files to load from Drive
+                            (e.g. <code>.pro</code>, <code>.cho</code>).
+                        </p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="drive-poll-interval-input">Poll Interval (seconds)</label>
+                        <input type="number" id="drive-poll-interval-input"
+                               class="prefs-input-narrow" min="0" max="3600" step="5" placeholder="30">
+                        <p class="prefs-hint">
+                            How often to check Drive for file changes.
+                            Set to <strong>0</strong> to disable polling.
+                        </p>
+                    </div>
+
+                    <p class="prefs-hint" style="font-style:italic;">
+                        Note: for security this app only accesses files it creates
+                        ("drive.file" scope).
+                    </p>
+                </div>
+
+            </div><!-- /.prefs-panels -->
+        </div><!-- /.prefs-body -->
+
+        <!-- Footer -->
+        <div class="prefs-footer">
+            <button id="reset-prefs-btn" class="btn-secondary"
+                    style="background-color:#6c757d;color:white;border:none;">Reset Defaults</button>
             <button id="save-prefs-btn">Save Changes</button>
         </div>
-    </div>
+
+    </div><!-- /.prefs-modal-content -->
 </div>
 
 <!-- Drive change notification toast -->
@@ -795,13 +1193,14 @@
         // Preferences elements
         const preferencesBtn = document.getElementById('preferences-btn');
         const preferencesModal = document.getElementById('preferences-modal');
-        const closeModalSpan = document.querySelector('.close-modal');
+        const closeModalSpan = document.getElementById('close-prefs-modal');
         const savePrefsBtn = document.getElementById('save-prefs-btn');
         const resetPrefsBtn = document.getElementById('reset-prefs-btn');
         const themeSelect = document.getElementById('theme-select');
         const showChordsCheckbox = document.getElementById('show-chords-checkbox');
         const showCommentsCheckbox = document.getElementById('show-comments-checkbox');
         const autoLoadCheckbox = document.getElementById('auto-load-checkbox');
+        const generalFileExtensionInput = document.getElementById('general-file-extension-input');
         const clientIdInput = document.getElementById('client-id-input');
         const apiKeyInput = document.getElementById('api-key-input');
         const folderIdInput = document.getElementById('folder-id-input');
@@ -822,6 +1221,55 @@
         function closePreferences() {
             preferencesModal.style.display = 'none';
         }
+
+        // ── Preferences nav-tree navigation ────────────────────────────────
+        (function initPrefsNav() {
+            const navItems = preferencesModal.querySelectorAll('.prefs-tree-item');
+            const panels   = preferencesModal.querySelectorAll('.prefs-panel');
+
+            function showPanel(screenId) {
+                panels.forEach(p => p.classList.remove('active'));
+                const target = preferencesModal.querySelector('#panel-' + screenId);
+                if (target) target.classList.add('active');
+            }
+
+            function setActive(item) {
+                navItems.forEach(n => {
+                    if (n.classList.contains('prefs-tree-leaf')) {
+                        n.classList.remove('active');
+                        n.setAttribute('aria-pressed', 'false');
+                    }
+                });
+                item.classList.add('active');
+                item.setAttribute('aria-pressed', 'true');
+            }
+
+            navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    if (item.classList.contains('prefs-tree-folder')) {
+                        // Toggle expand/collapse for folder rows
+                        const isExpanded = item.classList.toggle('expanded');
+                        item.setAttribute('aria-expanded', String(isExpanded));
+                        const children = item.querySelector('.prefs-tree-children');
+                        if (children) children.classList.toggle('open', isExpanded);
+                        e.stopPropagation();
+                        return;
+                    }
+                    // Leaf: activate and show its panel
+                    setActive(item);
+                    showPanel(item.dataset.screen);
+                });
+
+                // Keyboard support
+                item.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        item.click();
+                    }
+                });
+            });
+        })();
+        // ───────────────────────────────────────────────────────────────────
 
         // Track current view state
         let isSourceView = false;
@@ -1474,6 +1922,7 @@
                 showChordsCheckbox.checked = prefs.showChords;
                 showCommentsCheckbox.checked = prefs.showComments;
                 autoLoadCheckbox.checked = prefs.autoLoadLastSong;
+                generalFileExtensionInput.value = prefs.driveFileExtension || '.pro';
                 clientIdInput.value = prefs.googleClientId || '';
                 apiKeyInput.value = prefs.googleApiKey || '';
                 folderIdInput.value = prefs.googleFolderId || '';
