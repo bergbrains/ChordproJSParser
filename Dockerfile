@@ -15,6 +15,7 @@ WORKDIR /usr/share/nginx/html
 
 COPY --from=builder /app/dist/ dist/
 COPY examples/ examples/
+COPY plugins/ plugins/
 COPY style.css ./
 
 EXPOSE 80

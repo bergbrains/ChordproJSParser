@@ -364,3 +364,31 @@ document.querySelectorAll('.chord-line').forEach(el => {
     el.style.color = '#0066cc';
 });
 ```
+
+## Running Locally
+
+To run the examples and develop locally, we provide several management commands via a `Makefile`.
+
+### Local Development
+```bash
+make dev
+```
+Starts a development server with live reload on `http://localhost:3000/examples/`.
+
+### Production Preview
+```bash
+make preview
+```
+Builds the project and serves the results on `http://localhost:3000/examples/`.
+
+### Containerized Execution
+```bash
+make docker-up
+```
+Builds and starts the project via Docker (Nginx) on `http://localhost:8080/examples/`.
+
+For detailed information on development, testing, and architecture, see [DEVELOPMENT.md](DEVELOPMENT.md).
+
+## License
+
+MIT
