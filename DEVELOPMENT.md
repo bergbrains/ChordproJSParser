@@ -1,155 +1,89 @@
-# ChordPro JS Renderer Documentation
+# ChordproJS Development Guide
 
-## Overview
+This guide covers everything you need to know about developing, testing, and managing the ChordproJS application lifecycle.
 
-The ChordPro JS Renderer is a JavaScript module designed to easily integrate ChordPro-formatted song files into any web application. It parses standard ChordPro files and dynamically renders them into HTML, allowing customizable styling through CSS.
+## Environment Setup
 
----
+1.  Ensure you have **Node.js (LTS)** installed.
+2.  Install project dependencies:
+    ```bash
+    npm install
+    ```
 
-## Features
+## Lifecycle Management
 
-- Parses standard ChordPro syntax:
-  - Titles, artists, comments, and environment tags (chorus, verse, etc.)
-  - Chords rendered clearly above corresponding lyrics
-- Flexible rendering into any specified HTML container (`div`)
-- Customizable appearance via standard CSS
+We use a `Makefile` to provide a unified interface for managing the application. You can run `make help` to see all available commands.
 
----
+### Development Mode (Local)
 
-## Installation and Usage
+To start the library in development mode with live reloading:
+```bash
+make dev
+```
+- **Port:** 3000
+- **Watch:** Yes (Rollup watch)
+- **Host:** http://localhost:3000/examples/
 
-### 1. Include Module
+This uses `rollup-plugin-serve` and `rollup-plugin-livereload` to automatically rebuild and refresh your browser when changes are detected in `src/`.
 
-Copy `chordpro-renderer.js` into your project directory.
+### Production Preview (Local)
 
-```html
-<script type="module">
-  import { renderChordPro } from "./chordpro-renderer.js";
-</script>
+To build the production bundles and serve them locally:
+```bash
+make preview
+```
+- **Port:** 3000
+- **Watch:** No
+- **Host:** http://localhost:3000/examples/
+
+### Containerized Execution (Docker)
+
+To run the application inside a container (using Nginx):
+```bash
+make docker-up
+```
+- **Port:** 8080 (Mapped from 80)
+- **Host:** http://localhost:8080/examples/
+
+To stop and clean up:
+```bash
+make docker-down
 ```
 
-### 2. HTML Setup
+### Stopping Processes
 
-Include these elements in your HTML:
-
-```html
-<input type="file" id="filePicker" accept=".cho,.chopro,.txt" />
-<input type="text" id="filePath" placeholder="Or enter file URL" />
-<button id="loadBtn">Load ChordPro File</button>
-<div id="chordproTarget"></div>
+If you need to forcefully stop any processes running on the default ports:
+```bash
+make stop
 ```
 
-### 3. JavaScript Integration
+## Build System
 
-Here's how to connect user interaction with the renderer:
+We use **Rollup** for building the project.
+- `make build` generates:
+  - `dist/chordprojs.min.js` (UMD bundle)
+  - `dist/chordprojs.esm.js` (ES Module bundle)
+  - `dist/chordprojs.min.css` (Extracted CSS)
 
-```html
-<script type="module">
-  import { renderChordPro } from "./chordpro-renderer.js";
+## Testing and Quality
 
-  const target = document.getElementById("chordproTarget");
-  const filePicker = document.getElementById("filePicker");
-  const filePath = document.getElementById("filePath");
-  const loadBtn = document.getElementById("loadBtn");
-
-  filePicker.addEventListener("change", function (event) {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-
-    reader.onload = function (e) {
-      renderChordPro(e.target.result, target);
-    };
-
-    reader.readAsText(file);
-  });
-
-  loadBtn.addEventListener("click", function () {
-    fetch(filePath.value)
-      .then((response) => response.text())
-      .then((text) => renderChordPro(text, target))
-      .catch((err) => alert("Failed to load file: " + err));
-  });
-</script>
+### Unit Tests
+We use **Jest** for unit testing.
+```bash
+make test
 ```
 
----
-
-## Styling (CSS)
-
-Include basic CSS for readability:
-
-```css
-#chordproTarget {
-  border: 1px solid #ccc;
-  padding: 15px;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
-  margin-top: 15px;
-}
-
-pre.chord-line {
-  color: #c00;
-  font-weight: bold;
-  font-family: monospace;
-  margin: 0;
-  line-height: 1.1;
-}
-
-pre.lyric-line {
-  margin: 0 0 8px 0;
-  font-family: monospace;
-  line-height: 1.1;
-}
-
-.comment {
-  font-style: italic;
-  color: gray;
-  margin: 8px 0;
-}
-
-h1,
-h2 {
-  margin: 5px 0;
-}
+### Linting
+We use **ESLint** for code style and quality.
+```bash
+make lint
 ```
 
----
+## Internal Architecture
 
-## Module Architecture and Internal Logic
+The module exports a `ChordproJS` constructor that provides:
+- `parse(text)`: Parses ChordPro text into an internal structure.
+- `renderToElement(text, selectorOrElement)`: Renders directly into a DOM element.
+- `renderToHTML(text)`: Returns the rendered HTML as a string.
 
-The module (`chordpro-renderer.js`) exports a single JavaScript function:
-
-```javascript
-renderChordPro(text, targetElement);
-```
-
-### How It Works
-
-The parser works line-by-line:
-
-- **Directives**: Detects and processes ChordPro directives (title, artist, comments, chorus/verse blocks).
-- **Chord & Lyrics**: Extracts chords from bracket notation (`[Chord]`) and places them above their corresponding
-  lyrics, ensuring chords align correctly via monospace fonts.
-
-### Rendering Logic Flow
-
-```plaintext
-ChordPro File Input
-          ↓
- Split into lines
-          ↓
-For each line:
- ├── If directive → handle directive (title, artist, etc.)
- ├── If chords present → separate chords & lyrics, render chord line above lyric line
- └── Render empty lines or spaces appropriately
-          ↓
-Compose final HTML
-          ↓
-Insert into target HTML element
-```
-
-### Diagram
-
-```plaintext
-ChordPro Text Input
-       │
-```
+For more details on the API, see the [README.md](README.md).

@@ -10,6 +10,10 @@ const defaultPreferences = {
   autoLoadLastSong: true,
   googleClientId: "",
   googleApiKey: "",
+  googleFolderId: "",
+  googleFolderName: "ChordProJS",
+  driveFileExtension: ".pro",
+  drivePollInterval: 30,
 };
 
 const validatePreferences = (data) => {
@@ -43,6 +47,22 @@ const validatePreferences = (data) => {
     validated.googleApiKey = data.googleApiKey;
   }
 
+  if (typeof data.googleFolderId === "string") {
+    validated.googleFolderId = data.googleFolderId;
+  }
+
+  if (typeof data.googleFolderName === "string") {
+    validated.googleFolderName = data.googleFolderName;
+  }
+
+  if (typeof data.driveFileExtension === "string") {
+    validated.driveFileExtension = data.driveFileExtension;
+  }
+
+  if (typeof data.drivePollInterval === "number" && data.drivePollInterval >= 0) {
+    validated.drivePollInterval = data.drivePollInterval;
+  }
+
   return validated;
 };
 
@@ -65,7 +85,7 @@ export const savePreferences = (preferences) => {
     localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
   } catch (error) {
     console.error("Failed to save preferences", error);
-    throw new Error("Failed to save preferences");
+    throw new Error("Failed to save preferences", { cause: error });
   }
 };
 
