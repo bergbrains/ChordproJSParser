@@ -617,6 +617,18 @@
             flex-shrink: 0;
         }
 
+        /* Optional label suffix */
+        .label-optional {
+            font-weight: 400;
+            color: #888;
+            font-size: 0.82em;
+        }
+
+        /* Italic variant of prefs-hint */
+        .prefs-hint-italic {
+            font-style: italic;
+        }
+
         /* ── Dark theme overrides for the new prefs layout ─── */
         body.dark-theme .prefs-header,
         body.dark-theme .prefs-footer {
@@ -1066,12 +1078,12 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="api-key-input">API Key <span style="font-weight:400;color:#888">(optional)</span></label>
+                        <label for="api-key-input">API Key <span class="label-optional">(optional)</span></label>
                         <input type="text" id="api-key-input" placeholder="Enter API Key">
                     </div>
 
                     <div class="form-group">
-                        <label for="folder-id-input">Folder ID <span style="font-weight:400;color:#888">(optional)</span></label>
+                        <label for="folder-id-input">Folder ID <span class="label-optional">(optional)</span></label>
                         <input type="text" id="folder-id-input" placeholder="Leave empty for root">
                         <p class="prefs-hint">The unique Drive ID of the folder containing your songs.</p>
                     </div>
@@ -1105,7 +1117,7 @@
                         </p>
                     </div>
 
-                    <p class="prefs-hint" style="font-style:italic;">
+                    <p class="prefs-hint prefs-hint-italic">
                         Note: for security this app only accesses files it creates
                         ("drive.file" scope).
                     </p>
@@ -1116,8 +1128,7 @@
 
         <!-- Footer -->
         <div class="prefs-footer">
-            <button id="reset-prefs-btn" class="btn-secondary"
-                    style="background-color:#6c757d;color:white;border:none;">Reset Defaults</button>
+            <button id="reset-prefs-btn" class="secondary-btn">Reset Defaults</button>
             <button id="save-prefs-btn">Save Changes</button>
         </div>
 
