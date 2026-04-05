@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "ZohoMCP": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://project-917495635.zohomcp.com/mcp/ad4ee69c5f32c37a813e81b86e4124d7/message",
+        "--transport",
+        "http-only"
+      ]
+    }
+  }
+}
