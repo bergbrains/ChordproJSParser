@@ -64,3 +64,8 @@ stop:
 	-lsof -ti:3000 | xargs kill -9 2>/dev/null || echo "No process found on port 3000"
 	@echo "Stopping processes on port 8080..."
 	-lsof -ti:8080 | xargs kill -9 2>/dev/null || echo "No process found on port 8080"
+
+pre-commit:
+	pre-commit
+pre-commit-all:
+	pre-commit run -a
