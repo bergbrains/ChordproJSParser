@@ -53,6 +53,8 @@ describe("PreferencesService", () => {
       googleApiKey: "",
       googleFolderId: "",
       googleFolderName: "ChordProJS",
+      driveFileExtension: ".pro",
+      drivePollInterval: 30,
     });
   });
 
@@ -67,6 +69,8 @@ describe("PreferencesService", () => {
       googleApiKey: "test-api-key",
       googleFolderId: "",
       googleFolderName: "ChordProJS",
+      driveFileExtension: ".cho",
+      drivePollInterval: 60,
     };
 
     savePreferences(newPrefs);

@@ -12,6 +12,8 @@ const defaultPreferences = {
   googleApiKey: "",
   googleFolderId: "",
   googleFolderName: "ChordProJS",
+  driveFileExtension: ".pro",
+  drivePollInterval: 30,
 };
 
 const validatePreferences = (data) => {
@@ -51,6 +53,14 @@ const validatePreferences = (data) => {
 
   if (typeof data.googleFolderName === "string") {
     validated.googleFolderName = data.googleFolderName;
+  }
+
+  if (typeof data.driveFileExtension === "string") {
+    validated.driveFileExtension = data.driveFileExtension;
+  }
+
+  if (typeof data.drivePollInterval === "number" && data.drivePollInterval >= 0) {
+    validated.drivePollInterval = data.drivePollInterval;
   }
 
   return validated;

@@ -48,6 +48,7 @@
    * @param {string} [options.apiKey]   - API Key (overrides DEFAULT_API_KEY)
    * @param {string} [options.folderId] - Google Drive folder ID
    * @param {string} [options.folderName] - Google Drive folder name
+   * @param {string} [options.fileExtension] - File extension to list, e.g. ".pro" (default ".pro")
    */
   function GoogleDriveProvider(options) {
     options = options || {};
@@ -55,6 +56,7 @@
     this.apiKey = options.apiKey || DEFAULT_API_KEY;
     this.folderId = options.folderId || null;
     this.folderName = options.folderName || DEFAULT_FOLDER_NAME;
+    this.fileExtension = options.fileExtension || ".pro";
 
     this._gapiReady = false;
     this._gisReady = false;
@@ -542,9 +544,10 @@
    */
   GoogleDriveProvider.prototype._listProFiles = function (folderId, pageToken) {
     var self = this;
+    var ext = self.fileExtension || ".pro";
     var query =
       "'" + folderId + "' in parents" +
-      " and name contains '.pro'" +
+      " and name contains '" + ext + "'" +
       " and mimeType != 'application/vnd.google-apps.folder'" +
       " and trashed=false";
 

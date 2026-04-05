@@ -701,6 +701,20 @@
                     The name of the folder where your songs are stored.
                 </p>
             </div>
+            <div class="form-group">
+                <label for="drive-file-extension-input">File Extension</label>
+                <input type="text" id="drive-file-extension-input" placeholder=".pro" style="max-width: 120px;">
+                <p style="font-size: 0.75rem; color: #666; margin-top: 4px;">
+                    Extension of song files to load from Drive (e.g. <code>.pro</code>, <code>.cho</code>).
+                </p>
+            </div>
+            <div class="form-group">
+                <label for="drive-poll-interval-input">Poll Interval (seconds)</label>
+                <input type="number" id="drive-poll-interval-input" min="0" max="3600" step="5" placeholder="30" style="max-width: 100px;">
+                <p style="font-size: 0.75rem; color: #666; margin-top: 4px;">
+                    How often to check Drive for file changes. Set to <strong>0</strong> to disable polling.
+                </p>
+            </div>
             <p style="font-size: 0.75rem; color: #666; font-style: italic;">
                 Note: For security, this app only accesses files it creates ("drive.file" scope).
             </p>
@@ -710,6 +724,21 @@
             <button id="save-prefs-btn">Save Changes</button>
         </div>
     </div>
+</div>
+
+<!-- Drive change notification toast -->
+<div id="drive-change-toast"
+     style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+            background:#333; color:#fff; padding:12px 20px; border-radius:8px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:9999;
+            align-items:center; gap:12px; font-size:0.9rem; white-space:nowrap;">
+    <span id="drive-toast-msg"></span>
+    <button id="drive-toast-refresh"
+            style="background:teal;color:white;border:none;border-radius:4px;
+                   padding:6px 12px;cursor:pointer;font-size:0.85rem;">Refresh Now</button>
+    <button id="drive-toast-dismiss"
+            style="background:transparent;color:#ccc;border:1px solid #ccc;border-radius:4px;
+                   padding:6px 10px;cursor:pointer;font-size:0.85rem;">Dismiss</button>
 </div>
 
 <!-- Folder Browser Modal -->
@@ -778,6 +807,11 @@
         const folderIdInput = document.getElementById('folder-id-input');
         const folderNameInput = document.getElementById('folder-name-input');
         const chooseFolderBtn = document.getElementById('choose-folder-btn');
+        const driveFileExtensionInput = document.getElementById('drive-file-extension-input');
+        const drivePollIntervalInput = document.getElementById('drive-poll-interval-input');
+
+        // Drive polling state
+        let drivePollingTimer = null;
 
         function openPreferences() {
             preferencesModal.style.display = 'block';
@@ -976,6 +1010,7 @@
         useLocalBtn.addEventListener('click', () => {
             activeProvider = 'local';
             setActiveProviderUI('local');
+            stopDrivePolling();
             // Reload songs from localStorage
             fileStorage.files = [];
             fileStorage.currentFile = null;
@@ -1012,6 +1047,7 @@
                 if (prefs.googleApiKey) options.apiKey = prefs.googleApiKey;
                 if (prefs.googleFolderId) options.folderId = prefs.googleFolderId;
                 if (prefs.googleFolderName) options.folderName = prefs.googleFolderName;
+                if (prefs.driveFileExtension) options.fileExtension = prefs.driveFileExtension;
                 driveProvider = new GoogleDriveProvider(options);
             }
 
@@ -1059,6 +1095,7 @@
                 if (prefs.googleApiKey) options.apiKey = prefs.googleApiKey;
                 if (prefs.googleFolderId) options.folderId = prefs.googleFolderId;
                 if (prefs.googleFolderName) options.folderName = prefs.googleFolderName;
+                if (prefs.driveFileExtension) options.fileExtension = prefs.driveFileExtension;
                 driveProvider = new GoogleDriveProvider(options);
             }
             try {
@@ -1091,6 +1128,7 @@
         });
 
         async function loadDriveSongs() {
+            stopDrivePolling(); // Stop any previous polling cycle before refreshing
             selectedFiles.innerHTML = '<p>Loading from Google Drive…</p>';
             try {
                 const manifest = await driveProvider.listSongs();
@@ -1128,12 +1166,87 @@
                     selectedFiles.innerHTML = '<p>No songs in Google Drive</p>';
                     toggleViewLink.style.display = 'none';
                 }
+
+                startDrivePolling();
             } catch (err) {
                 console.error('Error loading from Drive:', err);
                 const msg = err.message || (typeof err === 'string' ? err : JSON.stringify(err));
                 selectedFiles.innerHTML = '<p style="color:red">Error loading from Google Drive: ' + msg + '</p>';
             }
         }
+
+        // ---------------------------------------------------------------------------
+        // Drive change polling
+        // ---------------------------------------------------------------------------
+
+        function startDrivePolling() {
+            stopDrivePolling();
+            const prefs = getPreferences();
+            const intervalSecs = parseInt(prefs.drivePollInterval, 10);
+            if (!intervalSecs || intervalSecs <= 0) return;
+
+            drivePollingTimer = setInterval(async () => {
+                if (activeProvider !== 'drive' || !driveProvider || !driveProvider.isAuthenticated()) {
+                    stopDrivePolling();
+                    return;
+                }
+                try {
+                    const fresh = await driveProvider.listSongs();
+                    const current = fileStorage.files;
+
+                    // Build lookup maps for comparison
+                    const currentById = {};
+                    current.forEach(f => { currentById[f.driveId] = f.lastModified; });
+                    const freshById = {};
+                    fresh.forEach(f => { freshById[f.id] = f.lastModified; });
+
+                    const changed = fresh.filter(f =>
+                        currentById[f.id] && currentById[f.id] !== f.lastModified
+                    );
+                    const added = fresh.filter(f => !currentById[f.id]);
+                    const removed = current.filter(f => !freshById[f.driveId]);
+
+                    const totalDelta = changed.length + added.length + removed.length;
+                    if (totalDelta > 0) {
+                        const parts = [];
+                        if (changed.length) parts.push(changed.length + ' changed');
+                        if (added.length)   parts.push(added.length + ' added');
+                        if (removed.length) parts.push(removed.length + ' removed');
+                        showDriveChangeToast(parts.join(', ') + ' on Drive.');
+                        stopDrivePolling(); // Pause until the user acts
+                    }
+                } catch (_) { /* Network blip — try again next interval */ }
+            }, intervalSecs * 1000);
+        }
+
+        function stopDrivePolling() {
+            if (drivePollingTimer !== null) {
+                clearInterval(drivePollingTimer);
+                drivePollingTimer = null;
+            }
+            hideDriveChangeToast();
+        }
+
+        function showDriveChangeToast(message) {
+            const toast = document.getElementById('drive-change-toast');
+            document.getElementById('drive-toast-msg').textContent = message;
+            toast.style.display = 'flex';
+        }
+
+        function hideDriveChangeToast() {
+            const toast = document.getElementById('drive-change-toast');
+            toast.style.display = 'none';
+        }
+
+        document.getElementById('drive-toast-refresh').addEventListener('click', () => {
+            hideDriveChangeToast();
+            loadDriveSongs();
+        });
+
+        document.getElementById('drive-toast-dismiss').addEventListener('click', () => {
+            hideDriveChangeToast();
+            startDrivePolling(); // Resume polling
+        });
 
         // Wrap file upload to also save to Drive when active
         async function saveFileToDrive(file, content) {
@@ -1278,7 +1391,9 @@
                     googleApiKey: apiKeyInput.value,
                     googleFolderId: folderIdInput.value,
                     googleFolderName: folderNameInput.value,
-                    zoomLevel: currentZoom // Persist current zoom level too
+                    zoomLevel: currentZoom, // Persist current zoom level too
+                    driveFileExtension: driveFileExtensionInput.value || '.pro',
+                    drivePollInterval: parseInt(drivePollIntervalInput.value, 10) || 0
                 };
                 savePreferences(newPrefs);
                 currentPreferences = newPrefs;
@@ -1298,11 +1413,12 @@
                         driveProvider = null;
                         if (useDriveBtn) useDriveBtn.click();
                     } else if (driveProvider) {
-                        // Update folder settings in-place without re-auth.
+                        // Update folder/extension settings in-place without re-auth.
                         driveProvider.updateFolderSettings(
                             newPrefs.googleFolderId || null,
                             newPrefs.googleFolderName || 'ChordProJS'
                         );
+                        driveProvider.fileExtension = newPrefs.driveFileExtension || '.pro';
                         loadDriveSongs();
                     }
                 }
@@ -1362,6 +1478,8 @@
                 apiKeyInput.value = prefs.googleApiKey || '';
                 folderIdInput.value = prefs.googleFolderId || '';
                 folderNameInput.value = prefs.googleFolderName || 'ChordProJS';
+                driveFileExtensionInput.value = prefs.driveFileExtension || '.pro';
+                drivePollIntervalInput.value = prefs.drivePollInterval !== undefined ? prefs.drivePollInterval : 30;
             }
 
             // ---------------------------------------------------------------------------
@@ -1464,10 +1582,24 @@
                 folderIdInput.value = selected.id === 'root' ? '' : selected.id;
                 // Build a human-readable path (skip "My Drive" root entry)
                 const pathSegments = folderBrowserStack.slice(1).map(f => f.name);
-                folderNameInput.value = pathSegments.length > 0
+                const folderName = pathSegments.length > 0
                     ? pathSegments.join('/')
                     : (selected.id === 'root' ? 'ChordProJS' : selected.name);
+                folderNameInput.value = folderName;
                 document.getElementById('folder-browser-modal').style.display = 'none';
+
+                // If Drive is the active provider, immediately apply the new folder
+                // and auto-load songs — no need to open Preferences and hit Save.
+                if (activeProvider === 'drive' && driveProvider && driveProvider.isAuthenticated()) {
+                    const folderId = selected.id === 'root' ? null : selected.id;
+                    // Also persist to preferences so it survives a page reload
+                    const prefs = getPreferences();
+                    prefs.googleFolderId = folderId || '';
+                    prefs.googleFolderName = folderName;
+                    savePreferences(prefs);
+                    driveProvider.updateFolderSettings(folderId, folderName);
+                    loadDriveSongs();
+                }
             });
 
             // Close folder browser when clicking outside its modal content
@@ -1602,6 +1734,16 @@
 
             // Refresh files from disk and refresh local storage
             function refreshFiles() {
+                // When Drive is the active provider, reload directly from Drive.
+                if (activeProvider === 'drive') {
+                    if (driveProvider && driveProvider.isAuthenticated()) {
+                        loadDriveSongs();
+                    } else {
+                        alert('Please sign in to Google Drive first.');
+                    }
+                    return;
+                }
+
                 // Store the currently selected files before refreshing
                 const selectedFileIdentifiers = fileStorage.selectedFiles.map(file => ({
                     name: file.name,
