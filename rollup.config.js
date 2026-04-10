@@ -14,11 +14,13 @@ export default {
       file: "dist/chordprojs.min.js",
       format: "umd",
       name: "ChordproJS",
+      exports: "named",
       plugins: [terser()]
     },
     {
       file: "dist/chordprojs.esm.js",
-      format: "es"
+      format: "es",
+      exports: "named"
     }
   ],
   plugins: [
@@ -30,9 +32,10 @@ export default {
       minimize: true
     }),
     isDev && serve({
-      contentBase: ["", "examples"],
+      contentBase: ".",
       open: true,
-      port: 3000,
+      openPage: "/examples/file-list.html",
+      port: 3001,
       host: "localhost"
     }),
     isDev && livereload("dist")

@@ -13,10 +13,13 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
+    "start": "npm run serve",
+    "serve": "npx serve -l 3001 .",
+    "preview": "npm run build && npm run serve",
     "lint": "eslint src",
+    "test": "jest",
     "prepare": "npm run build",
-    "prepublishOnly": "npm run test && npm run build",
-    "test": "jest"
+    "prepublishOnly": "npm run test && npm run build"
   },
   "keywords": [
     "chordpro",
@@ -46,7 +49,5 @@
     "rollup-plugin-serve": "^3.0.0",
     "typescript": "6.0.2"
   },
-  "dependencies": {
-    "show": "^0.0.1"
-  }
+  "dependencies": {}
 }
