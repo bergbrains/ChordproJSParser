@@ -1,4 +1,4 @@
-exclude: '^dist$'
+exclude: '^dist/'
 fail_fast: false
 # .pre-commit-config.yaml
 repos:
@@ -7,26 +7,27 @@ repos:
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
-        exclude: '.*dist\/.*|package-lock.json'
+        exclude: 'package-lock.json'
       - id: check-yaml
       - id: check-json
       - id: check-merge-conflict
       - id: check-added-large-files
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.9
+    rev: v0.16.2
     hooks:
-      - id: ruff
-        stages: [commit]
+      - id: ruff-check
+        stages: [pre-commit]
 
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v10.2.0
+    rev: v10.8.1
     hooks:
       - id: eslint
         args: [ --no-warn-ignored, --fix ]
         files: \.[jt]sx?$  # match JavaScript and TypeScript files
-        exclude: '.*dist\/.*'
-        types: [ file ]
+        types_or: [javascript, jsx, ts, tsx]
         additional_dependencies:
-          - eslint
-          - '@eslint/js'
+          - eslint@10.2.0
+          - '@eslint/js@10.0.1'
+          - eslint-config-prettier@10.1.8
+          - globals@17.4.0
