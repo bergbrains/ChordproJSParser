@@ -1,1 +1,0 @@
-/Users/ericberg/work/Projects/global-ai-config/AGENTS.md
